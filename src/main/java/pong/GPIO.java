@@ -41,14 +41,6 @@ public class GPIO {
         gpio.addListener(pinListener, Arrays.copyOf(inputs, LISTEN_PINS));
     }
 
-    private PinState[] getInputStates(int start, int end) {
-        PinState[] states = new PinState[end - start];
-        for (int i = start; i < end; i++) {
-            states[i] = inputs[i].getState();
-        }
-        return states;
-    }
-
     private static int decimalState(PinState[] states) {
         int value = 0;
         for (int i = 0; i < states.length; i++) {
@@ -59,14 +51,12 @@ public class GPIO {
         return value;
     }
 
-    public interface Listener {
-        void ballX(int x);
-
-        void ballY(int y);
-
-        void paddleLeft(int y);
-
-        void paddleRight(int y);
+    private PinState[] getInputStates(int start, int end) {
+        PinState[] states = new PinState[end - start];
+        for (int i = start; i < end; i++) {
+            states[i] = inputs[i].getState();
+        }
+        return states;
     }
 
     private enum Mode {
@@ -98,5 +88,15 @@ public class GPIO {
         public boolean equals(int value) {
             return this.value == value;
         }
+    }
+
+    public interface Listener {
+        void ballX(int x);
+
+        void ballY(int y);
+
+        void paddleLeft(int y);
+
+        void paddleRight(int y);
     }
 }

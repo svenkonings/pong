@@ -9,14 +9,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import pong.Field;
 import pong.GPIO;
 
 public class MainPane extends Application implements GPIO.Listener {
-    private static final double X = 4096; // 2^12
-    private static final double Y = 2048; // 2^11
-    private static final double ASPECT_RATIO = X / Y;
     private static final double BALL_SCALE_X = 50;
-    private static final double BALL_SCALE_Y = BALL_SCALE_X / ASPECT_RATIO;
+    private static final double BALL_SCALE_Y = BALL_SCALE_X / Field.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
     private static final double PADDLE_SCALE_Y = 8;
 
@@ -25,6 +23,10 @@ public class MainPane extends Application implements GPIO.Listener {
     private Circle ball;
     private Rectangle paddleLeft;
     private Rectangle paddleRight;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -47,17 +49,13 @@ public class MainPane extends Application implements GPIO.Listener {
         System.out.println("Application Started");
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     private void resize() {
         double width = root.getWidth();
         double height = root.getHeight();
-        if (height >= width / ASPECT_RATIO) {
-            pane.setMaxSize(width, width / ASPECT_RATIO);
+        if (height >= width / Field.ASPECT_RATIO) {
+            pane.setMaxSize(width, width / Field.ASPECT_RATIO);
         } else {
-            pane.setMaxSize(height * ASPECT_RATIO, height);
+            pane.setMaxSize(height * Field.ASPECT_RATIO, height);
         }
     }
 

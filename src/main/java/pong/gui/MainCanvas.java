@@ -8,14 +8,12 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import pong.Field;
 import pong.GPIO;
 
 public class MainCanvas extends Application implements GPIO.Listener {
-    private static final double X = 4096; // 2^12
-    private static final double Y = 2048; // 2^11
-    private static final double ASPECT_RATIO = X / Y;
     private static final double BALL_SCALE_X = 50;
-    private static final double BALL_SCALE_Y = BALL_SCALE_X / ASPECT_RATIO;
+    private static final double BALL_SCALE_Y = BALL_SCALE_X / Field.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
     private static final double PADDLE_SCALE_Y = 8;
 
@@ -26,6 +24,10 @@ public class MainCanvas extends Application implements GPIO.Listener {
     private double ballY;
     private double paddleLeft;
     private double paddleRight;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -68,42 +70,38 @@ public class MainCanvas extends Application implements GPIO.Listener {
     private void resize() {
         double width = pane.getWidth();
         double height = pane.getHeight();
-        if (height >= width / ASPECT_RATIO) {
+        if (height >= width / Field.ASPECT_RATIO) {
             canvas.setWidth(width);
-            canvas.setHeight(width / ASPECT_RATIO);
+            canvas.setHeight(width / Field.ASPECT_RATIO);
         } else {
             canvas.setHeight(height);
-            canvas.setWidth(height * ASPECT_RATIO);
+            canvas.setWidth(height * Field.ASPECT_RATIO);
         }
         redraw();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     // GPIO.Listener implementation
     @Override
     public void ballX(int x) {
-        ballX = x / X;
+        ballX = x / Field.MAX_X;
         redraw();
     }
 
     @Override
     public void ballY(int y) {
-        ballY = y / Y;
+        ballY = y / Field.MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleLeft(int y) {
-        paddleLeft = y / Y;
+        paddleLeft = y / Field.MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleRight(int y) {
-        paddleRight = y / Y;
+        paddleRight = y / Field.MAX_Y;
         redraw();
     }
 }
