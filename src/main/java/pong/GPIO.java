@@ -22,7 +22,7 @@ public class GPIO {
             outputs[i] = gpio.provisionDigitalOutputPin(RaspiPin.getPinByName("GPIO " + (INPUT_PINS + i)));
         }
         GpioPinListenerDigital pinListener = event -> {
-            Mode mode = Mode.getMode(decimalState(getInputStates(0, LISTEN_PINS)));
+            Mode mode = Mode.getMode(decimalState(getStates(inputs, 0, LISTEN_PINS)));
             switch (mode) {
                 case BALL_X:
                     listener.ballX(0);
@@ -41,9 +41,9 @@ public class GPIO {
         gpio.addListener(pinListener, Arrays.copyOf(inputs, LISTEN_PINS));
     }
 
-    private static int decimalState(PinState[] states) {
+    public static int decimalState(PinState[] states) {
         int value = 0;
-        for (int i = 0; i < states.length; i++) {
+        for (int i = states.length - 1; i >= 0; i--) {
             if (states[i].isHigh()) {
                 value += Util.pow(2, i);
             }
@@ -51,10 +51,10 @@ public class GPIO {
         return value;
     }
 
-    private PinState[] getInputStates(int start, int end) {
+    public static PinState[] getStates(GpioPinDigital[] pins, int start, int end) {
         PinState[] states = new PinState[end - start];
         for (int i = start; i < end; i++) {
-            states[i] = inputs[i].getState();
+            states[i] = pins[i].getState();
         }
         return states;
     }

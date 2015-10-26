@@ -18,8 +18,4 @@ public class Paddle extends Rectangle {
     public Paddle(double x, double y, double width, double height) {
         super(x, y, width, height);
     }
-
-    public void setFieldY(double y) {
-        setY(y - (getHeight() / 2));
-    }
 }

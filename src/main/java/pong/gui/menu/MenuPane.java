@@ -25,29 +25,36 @@ public class MenuPane extends Application {
         pane = new Pane(paddle);
         primaryStage.setScene(new Scene(pane, 1280, 720));
         primaryStage.show();
-        test();
+        test(); // Temporary
     }
 
     public void paddleY(int fieldY) {
         double y = (fieldY / Field.MAX_Y) * pane.getHeight();
-        paddle.setFieldY(y);
+        paddle.setY(y);
+        Button selectedNew = null;
         for (Node child : pane.getChildrenUnmodifiable()) {
+            // Loop through all the buttons of this pane
             if (child instanceof Button) {
                 Button button = (Button) child;
-                if (button.containsY(y)) {
+                // Test if the middle of the paddle is somewhere between the top and the bottom of the button
+                if (button.containsY(y + paddle.getHeight() / 2)) {
+                    // Button selected
                     button.setFill(Color.RED);
-                    selected = button;
-                    return;
+                    selectedNew = button;
                 } else {
+                    // Button deselected
                     button.setFill(Color.BLUE);
                 }
             }
         }
-        selected = null;
+        // Update selected button
+        selected = selectedNew;
     }
 
     public void click() {
+        // If there is a selected button
         if (selected != null) {
+            // Execute the code of the selected button
             selected.click();
         }
     }
@@ -61,7 +68,7 @@ public class MenuPane extends Application {
         };
         button.setFill(Color.BLUE);
         pane.getChildren().add(button);
-        paddleY(400);
+        paddleY(300);
         click();
     }
 }
