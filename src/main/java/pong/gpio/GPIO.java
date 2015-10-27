@@ -43,9 +43,11 @@ public class GPIO {
     }
 
     public static int decimalState(PinState[] states) {
+        PinState[] inverse = states.clone();
+        Util.inverse(inverse);
         int value = 0;
-        for (int i = states.length - 1; i >= 0; i--) {
-            if (states[i].isHigh()) {
+        for (int i = 0; i < inverse.length; i++) {
+            if (inverse[i].isHigh()) {
                 value += Util.pow(2, i);
             }
         }
@@ -55,7 +57,7 @@ public class GPIO {
     public static PinState[] getStates(GpioPinDigital[] pins, int start, int end) {
         PinState[] states = new PinState[end - start];
         for (int i = start; i < end; i++) {
-            states[i] = pins[i].getState();
+            states[i - start] = pins[i].getState();
         }
         return states;
     }

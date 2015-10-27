@@ -70,4 +70,9 @@ public enum Pins {
     public int getLogical() {
         return logical;
     }
+
+    @Override
+    public String toString() {
+        return name() + "(" + pin.getAddress() + ", " + protoBoard + ", " + logical + ")";
+    }
 }
