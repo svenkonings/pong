@@ -10,7 +10,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import pong.Dimen;
-import pong.GPIO;
+import pong.gpio.GPIO;
 
 public class MainPane extends Application implements GPIO.Listener {
     private static final double BALL_SCALE_X = 50;

@@ -9,7 +9,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import pong.Dimen;
-import pong.GPIO;
+import pong.gpio.GPIO;
 
 public class MainCanvas extends Application implements GPIO.Listener {
     private static final double BALL_SCALE_X = 50;

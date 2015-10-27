@@ -1,4 +1,4 @@
-package pong;
+package pong.gpio;
 
 import com.pi4j.io.gpio.*;
 

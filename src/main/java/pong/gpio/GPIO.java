@@ -1,7 +1,8 @@
-package pong;
+package pong.gpio;
 
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import pong.Util;
 
 import java.util.Arrays;
 
@@ -22,7 +23,7 @@ public class GPIO {
             outputs[i] = gpio.provisionDigitalOutputPin(RaspiPin.getPinByName("GPIO " + (INPUT_PINS + i)));
         }
         GpioPinListenerDigital pinListener = event -> {
-            Mode mode = Mode.getMode(decimalState(getInputStates(0, LISTEN_PINS)));
+            Mode mode = Mode.getMode(decimalState(getStates(inputs, 0, LISTEN_PINS)));
             switch (mode) {
                 case BALL_X:
                     listener.ballX(0);
@@ -41,20 +42,22 @@ public class GPIO {
         gpio.addListener(pinListener, Arrays.copyOf(inputs, LISTEN_PINS));
     }
 
-    private static int decimalState(PinState[] states) {
+    public static int decimalState(PinState[] states) {
+        PinState[] inverse = states.clone();
+        Util.inverse(inverse);
         int value = 0;
-        for (int i = 0; i < states.length; i++) {
-            if (states[i].isHigh()) {
+        for (int i = 0; i < inverse.length; i++) {
+            if (inverse[i].isHigh()) {
                 value += Util.pow(2, i);
             }
         }
         return value;
     }
 
-    private PinState[] getInputStates(int start, int end) {
+    public static PinState[] getStates(GpioPinDigital[] pins, int start, int end) {
         PinState[] states = new PinState[end - start];
         for (int i = start; i < end; i++) {
-            states[i] = inputs[i].getState();
+            states[i - start] = pins[i].getState();
         }
         return states;
     }

@@ -19,8 +19,16 @@ public abstract class Button extends Rectangle {
         super(x, y, width, height);
     }
 
+    /**
+     * Override this method to add code that is executed when the button is clicked.
+     */
     public abstract void click();
 
+    /**
+     * Tests if the y coordinate is inside the vertical boundary of the button.
+     * @param y - the y coordinate
+     * @return true if the y coordinate is inside the vertical boundary.
+     */
     public boolean containsY(double y) {
         return getY() <= y && y <= getY() + getHeight();
     }
