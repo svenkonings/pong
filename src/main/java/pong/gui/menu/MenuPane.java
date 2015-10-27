@@ -6,10 +6,12 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import pong.Field;
+import pong.Dimen;
 import pong.gui.Paddle;
 
 public class MenuPane extends Application {
+    private final static double PADDLE_WIDTH = 20, PADDLE_HEIGHT = 50;
+    private final static double SCENE_WIDTH = 1280, SCENE_HEIGHT = 720;
     private Pane pane;
     private Paddle paddle;
     private Button selected;
@@ -20,17 +22,20 @@ public class MenuPane extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        paddle = new Paddle(20, 50);
+        paddle = new Paddle(PADDLE_WIDTH, PADDLE_HEIGHT);
         paddle.setFill(Color.BLUE);
         pane = new Pane(paddle);
-        primaryStage.setScene(new Scene(pane, 1280, 720));
+        primaryStage.setScene(new Scene(pane, SCENE_WIDTH, SCENE_HEIGHT));
         primaryStage.show();
         test();
     }
 
+    // Updates the y position of the paddle according to the value given by the FPGA
     public void paddleY(int fieldY) {
-        double y = (fieldY / Field.MAX_Y) * pane.getHeight();
-        paddle.setFieldY(y);
+        // Convert from FPGA format to GUI format
+        double y = Dimen.convertY(fieldY, pane.getHeight());
+        paddle.setY(y);
+
         for (Node child : pane.getChildrenUnmodifiable()) {
             if (child instanceof Button) {
                 Button button = (Button) child;

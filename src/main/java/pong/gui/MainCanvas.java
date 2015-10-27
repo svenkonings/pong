@@ -8,12 +8,12 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import pong.Field;
+import pong.Dimen;
 import pong.GPIO;
 
 public class MainCanvas extends Application implements GPIO.Listener {
     private static final double BALL_SCALE_X = 50;
-    private static final double BALL_SCALE_Y = BALL_SCALE_X / Field.ASPECT_RATIO;
+    private static final double BALL_SCALE_Y = BALL_SCALE_X / Dimen.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
     private static final double PADDLE_SCALE_Y = 8;
 
@@ -70,12 +70,12 @@ public class MainCanvas extends Application implements GPIO.Listener {
     private void resize() {
         double width = pane.getWidth();
         double height = pane.getHeight();
-        if (height >= width / Field.ASPECT_RATIO) {
+        if (height >= width / Dimen.ASPECT_RATIO) {
             canvas.setWidth(width);
-            canvas.setHeight(width / Field.ASPECT_RATIO);
+            canvas.setHeight(width / Dimen.ASPECT_RATIO);
         } else {
             canvas.setHeight(height);
-            canvas.setWidth(height * Field.ASPECT_RATIO);
+            canvas.setWidth(height * Dimen.ASPECT_RATIO);
         }
         redraw();
     }
@@ -83,25 +83,25 @@ public class MainCanvas extends Application implements GPIO.Listener {
     // GPIO.Listener implementation
     @Override
     public void ballX(int x) {
-        ballX = x / Field.MAX_X;
+        ballX = x / Dimen.FPGA_MAX_X;
         redraw();
     }
 
     @Override
     public void ballY(int y) {
-        ballY = y / Field.MAX_Y;
+        ballY = y / Dimen.FPGA_MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleLeft(int y) {
-        paddleLeft = y / Field.MAX_Y;
+        paddleLeft = y / Dimen.FPGA_MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleRight(int y) {
-        paddleRight = y / Field.MAX_Y;
+        paddleRight = y / Dimen.FPGA_MAX_Y;
         redraw();
     }
 }

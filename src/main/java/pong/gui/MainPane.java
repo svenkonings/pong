@@ -9,12 +9,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import pong.Field;
+import pong.Dimen;
 import pong.GPIO;
 
 public class MainPane extends Application implements GPIO.Listener {
     private static final double BALL_SCALE_X = 50;
-    private static final double BALL_SCALE_Y = BALL_SCALE_X / Field.ASPECT_RATIO;
+    private static final double BALL_SCALE_Y = BALL_SCALE_X / Dimen.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
     private static final double PADDLE_SCALE_Y = 8;
 
@@ -52,10 +52,10 @@ public class MainPane extends Application implements GPIO.Listener {
     private void resize() {
         double width = root.getWidth();
         double height = root.getHeight();
-        if (height >= width / Field.ASPECT_RATIO) {
-            pane.setMaxSize(width, width / Field.ASPECT_RATIO);
+        if (height >= width / Dimen.ASPECT_RATIO) {
+            pane.setMaxSize(width, width / Dimen.ASPECT_RATIO);
         } else {
-            pane.setMaxSize(height * Field.ASPECT_RATIO, height);
+            pane.setMaxSize(height * Dimen.ASPECT_RATIO, height);
         }
     }
 
