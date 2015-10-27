@@ -1,7 +1,8 @@
-package pong;
+package pong.gpio;
 
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import pong.Util;
 
 import java.util.Arrays;
 

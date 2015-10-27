@@ -8,4 +8,13 @@ public class Util {
         }
         return result;
     }
+
+    public static void inverse(Object[] data) {
+        for (int left = 0, right = data.length - 1; left < right; left++, right--) {
+            // swap the values at the left and right indices
+            Object temp = data[left];
+            data[left] = data[right];
+            data[right] = temp;
+        }
+    }
 }
