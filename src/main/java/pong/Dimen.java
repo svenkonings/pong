@@ -10,7 +10,7 @@ public class Dimen {
     /*y bottom*/ public static final double FPGA_MIN_Y = 0;
     /*y top   */ public static final double FPGA_MAX_Y = 2048; // 2^11
     public static final double ASPECT_RATIO = FPGA_MAX_X / FPGA_MAX_Y;
-    public static double FPGA_PADDLE_HEIGHT = 40; // Will be updated to a calibrated value. Default is 40.
+    public static double FPGA_PADDLE_HEIGHT = 2048; // Will be updated to a calibrated value. Default is 40.
 
     // JAVA GUI format: left top is (0,0)
     /*x left   = 0 */
