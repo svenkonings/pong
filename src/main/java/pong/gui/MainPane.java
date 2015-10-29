@@ -10,9 +10,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import pong.Dimen;
-import pong.gpio.GPIO;
 
-public class MainPane extends Application implements GPIO.Listener {
+public class MainPane extends Application {
     private static final double BALL_SCALE_X = 50;
     private static final double BALL_SCALE_Y = BALL_SCALE_X / Dimen.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
@@ -59,20 +58,15 @@ public class MainPane extends Application implements GPIO.Listener {
         }
     }
 
-    // GPIO.Listener implementation
-    @Override
     public void ballX(int x) {
     }
 
-    @Override
     public void ballY(int y) {
     }
 
-    @Override
     public void paddleLeft(int y) {
     }
 
-    @Override
     public void paddleRight(int y) {
     }
 }

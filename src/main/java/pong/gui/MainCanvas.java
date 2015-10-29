@@ -9,9 +9,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import pong.Dimen;
-import pong.gpio.GPIO;
 
-public class MainCanvas extends Application implements GPIO.Listener {
+public class MainCanvas extends Application {
     private static final double BALL_SCALE_X = 50;
     private static final double BALL_SCALE_Y = BALL_SCALE_X / Dimen.ASPECT_RATIO;
     private static final double PADDLE_SCALE_X = 50;
@@ -80,26 +79,21 @@ public class MainCanvas extends Application implements GPIO.Listener {
         redraw();
     }
 
-    // GPIO.Listener implementation
-    @Override
     public void ballX(int x) {
         ballX = x / Dimen.FPGA_MAX_X;
         redraw();
     }
 
-    @Override
     public void ballY(int y) {
         ballY = y / Dimen.FPGA_MAX_Y;
         redraw();
     }
 
-    @Override
     public void paddleLeft(int y) {
         paddleLeft = y / Dimen.FPGA_MAX_Y;
         redraw();
     }
 
-    @Override
     public void paddleRight(int y) {
         paddleRight = y / Dimen.FPGA_MAX_Y;
         redraw();
