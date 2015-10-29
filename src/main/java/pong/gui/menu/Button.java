@@ -26,6 +26,7 @@ public abstract class Button extends Rectangle {
 
     /**
      * Tests if the y coordinate is inside the vertical boundary of the button.
+     *
      * @param y - the y coordinate
      * @return true if the y coordinate is inside the vertical boundary.
      */
