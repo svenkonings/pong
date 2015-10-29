@@ -1,27 +1,27 @@
 package pong.gpio;
 
-public class Gpio implements Runnable {
+public class Gpio extends Thread {
     static {
         System.loadLibrary("Gpio");
     }
 
     public static void main(String[] args) {
-        new Thread(new Gpio()).start();
+        Gpio gpio = new Gpio();
+        gpio.start();
         System.out.println("Called");
         try {
             Thread.sleep(Long.MAX_VALUE);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            Thread.currentThread().interrupt();
         }
     }
 
     private native void listen();
 
-    private native void send();
+    private native void send(int value);
 
     private void receive(int value) {
-        System.out.println(value);
+        System.out.print(value);
     }
 
     @Override

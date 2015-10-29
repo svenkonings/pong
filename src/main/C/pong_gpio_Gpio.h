@@ -18,10 +18,10 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen
 /*
  * Class:     pong_gpio_Gpio
  * Method:    send
- * Signature: ()V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_pong_gpio_Gpio_send
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }
