@@ -81,6 +81,18 @@ public class Gpio extends Thread {
         listener.ballY(y);
     }
 
+    private void goalLeft() {
+        listener.goalLeft();
+    }
+
+    private void goalRight() {
+        listener.goalRight();
+    }
+
+    private void collision() {
+        listener.collision();
+    }
+
     @Override
     public void run() {
         listen();
