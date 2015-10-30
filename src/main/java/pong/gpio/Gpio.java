@@ -63,7 +63,7 @@ public class Gpio extends Thread {
 
     private native void listen();
 
-    private native void send(int value);
+    public native void send(int value);
 
     private void paddleLeft(int y) {
         listener.paddleLeft(y);
