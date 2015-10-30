@@ -83,25 +83,25 @@ public class MainCanvas extends Application implements GPIO.Listener {
     // GPIO.Listener implementation
     @Override
     public void ballX(int x) {
-        ballX = x / Dimen.FPGA_MAX_X;
+        ballX = x / Dimen.REAL_MAX_X;
         redraw();
     }
 
     @Override
     public void ballY(int y) {
-        ballY = y / Dimen.FPGA_MAX_Y;
+        ballY = y / Dimen.REAL_MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleLeft(int y) {
-        paddleLeft = y / Dimen.FPGA_MAX_Y;
+        paddleLeft = y / Dimen.REAL_MAX_Y;
         redraw();
     }
 
     @Override
     public void paddleRight(int y) {
-        paddleRight = y / Dimen.FPGA_MAX_Y;
+        paddleRight = y / Dimen.REAL_MAX_Y;
         redraw();
     }
 }
