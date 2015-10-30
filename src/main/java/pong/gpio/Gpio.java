@@ -9,10 +9,13 @@ public class Gpio extends Thread {
         Gpio gpio = new Gpio();
         gpio.start();
         System.out.println("Called");
-        try {
-            Thread.sleep(Long.MAX_VALUE);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            gpio.send(1234);
         }
     }
 

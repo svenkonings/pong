@@ -7,6 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef pong_gpio_Gpio_MIN_PRIORITY
+#define pong_gpio_Gpio_MIN_PRIORITY 1L
+#undef pong_gpio_Gpio_NORM_PRIORITY
+#define pong_gpio_Gpio_NORM_PRIORITY 5L
+#undef pong_gpio_Gpio_MAX_PRIORITY
+#define pong_gpio_Gpio_MAX_PRIORITY 10L
 /*
  * Class:     pong_gpio_Gpio
  * Method:    listen
