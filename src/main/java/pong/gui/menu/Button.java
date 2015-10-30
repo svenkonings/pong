@@ -26,6 +26,7 @@ public abstract class Button extends Rectangle {
 
     /**
      * Tests if the y coordinate is within the vertical boundaries of the button.
+     *
      * @param y - the y coordinate of the top of the paddle
      * @return true if the y coordinate is within the vertical boundaries
      */
