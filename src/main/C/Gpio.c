@@ -11,26 +11,29 @@ int output = 0; // Sending or receiving boolean
 
 // Uses Producer-Consumer model for data transfer between threads
 sem_t receiveElements, receiveSpaces, sendElements, sendSpaces;
-sem_t receiveProdMutex, sendProdMutex, sendConsMutex; // Thread safety, receiveCons is always a single thread
-int receiveBuffer[N], sendBuffer[N];
+sem_t receiveProdMutex, sendProdMutex, sendConsMutex; // Thread safety mutexes, receiveCons is always a single thread
+int receiveBuffer[N][3], sendBuffer[N];
 int receiveIn = 0, receiveOut = 0, sendIn = 0, sendOut = 0;
 
 // Called every edge of the clock
 void trigger(void) {
-//	printf("Clock: %d, Output: %d\n", digitalRead(11), output);
 	if (digitalRead(11)) { // Rising edge
 		if (!output) { // Receiving
-			// Convert pins to decimal value
-			int value = 0;
-			for(int i = 0; i < 15; i++) {
-//				printf("ReadPin: %d\n", digitalRead(pins[i]));
+			// Convert pins to goal, mode and value
+			int mode = 0, value = 0;
+			int goal = digitalRead(pins[0]);
+			for(int i = 1; i < 3; i++) {
+				mode = mode * 2 + digitalRead(pins[i]);
+			}
+			for(int i = 3; i < 15; i++) {
 				value = value * 2 + digitalRead(pins[i]);
 			}
-			// Add value to buffer
+			// Add goal, mode and value to buffer
 			sem_wait(&receiveSpaces);
 			sem_wait(&receiveProdMutex);
-//			printf("ReceiveWrite: %d\n", value);
-			receiveBuffer[receiveIn] = value;
+			receiveBuffer[receiveIn][0] = mode;
+			receiveBuffer[receiveIn][1] = value;
+			receiveBuffer[receiveIn][2] = goal;
 			receiveIn = (receiveIn + 1) % N;
 			sem_post(&receiveProdMutex);
 			sem_post(&receiveElements);
@@ -39,7 +42,6 @@ void trigger(void) {
 		int sendData; // Sending data available boolean
 		sem_wait(&sendConsMutex);
 		sem_getvalue(&sendElements, &sendData); 
-//		printf("sendData: %d\n", sendData);
 		if (sendData) { // Want to send
 			if (!output) { // Previously not sending
 				// Start sending
@@ -49,17 +51,14 @@ void trigger(void) {
 				for(int i = 0; i < 15; i++) {
 					pinMode(pins[i], OUTPUT);
 				}
-//				printf("Output true\n");
 			}
 			// Read value from buffer
 			sem_wait(&sendElements);
-//			printf("sendRead: %d\n", sendBuffer[sendOut]);
 			int value = sendBuffer[sendOut];
 			sendOut = (sendOut + 1) % N;
 			sem_post(&sendSpaces);
 			// Convert decimal to pins
 			for (int i = 0; i < 15; i++) {
-//				printf("WritePin: %d\n", (value >> i) & 1);
 				digitalWrite(pins[i], (value >> i) & 1);
 			}
 		} else { // Don't want to send
@@ -71,7 +70,6 @@ void trigger(void) {
 				for(int i = 0; i < 15; i++) {
 					pinMode(pins[i], INPUT);
 				}
-//				printf("Output false\n");
 			}
 		}
 		sem_post(&sendConsMutex);
@@ -82,8 +80,14 @@ void trigger(void) {
 JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) {
 	// Get a reference to this object's class
 	jclass thisClass = (*env)->GetObjectClass(env, thisObj);
-	// Get the Method ID for method "receive"
-	jmethodID midCallBack = (*env)->GetMethodID(env, thisClass, "receive", "(I)V");
+	// Get the Method IDs for the listener methods
+	jmethodID paddleLeft = (*env)->GetMethodID(env, thisClass, "paddleLeft", "(I)V");
+	jmethodID paddleRight = (*env)->GetMethodID(env, thisClass, "paddleRight", "(I)V");
+	jmethodID ballX = (*env)->GetMethodID(env, thisClass, "ballX", "(I)V");
+	jmethodID ballY = (*env)->GetMethodID(env, thisClass, "ballY", "(I)V");
+	jmethodID goalLeft = (*env)->GetMethodID(env, thisClass, "goalLeft", "()V");
+	jmethodID goalRight = (*env)->GetMethodID(env, thisClass, "goalRight", "()V");
+	jmethodID collision = (*env)->GetMethodID(env, thisClass, "collsion", "()V");
 	// Initialize semaphores
 	sem_init(&receiveElements, 0, 0);
     sem_init(&receiveSpaces, 0, N);
@@ -104,12 +108,37 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 	wiringPiISR(11, INT_EDGE_BOTH, trigger);
 	// Receive loop
 	while(1) {
-		// Read value from buffer
+		// Read goal, mode and value from buffer
 		sem_wait(&receiveElements);
-//		printf("ReceiveRead: %d\n", receiveBuffer[receiveOut]);
-		(*env)->CallVoidMethod(env, thisObj, midCallBack, receiveBuffer[receiveOut]);
+		int mode = receiveBuffer[receiveOut][0];
+		int value = receiveBuffer[receiveOut][1];
+		int goal = receiveBuffer[receiveOut][2];
 		receiveOut = (receiveOut + 1) % N;
 		sem_post(&receiveSpaces);
+		// Call the methods
+		switch(mode) {
+			case 0:
+				if (goal) {
+					(*env)->CallVoidMethod(env, thisObj, goalLeft);
+				}
+				(*env)->CallVoidMethod(env, thisObj, paddleLeft, value);
+				break;
+			case 1:
+				if (goal) {
+					(*env)->CallVoidMethod(env, thisObj, goalRight);
+				}
+				(*env)->CallVoidMethod(env, thisObj, paddleRight, value);
+				break;
+			case 2:
+				if (goal) {
+					(*env)->CallVoidMethod(env, thisObj, collision);
+				}
+				(*env)->CallVoidMethod(env, thisObj, ballX, value);
+				break;
+			case 3:
+				(*env)->CallVoidMethod(env, thisObj, ballY, value);
+				break;
+		}
 	}
 	// Destroy semaphores
 	sem_destroy(&receiveElements);
@@ -127,7 +156,6 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_send(JNIEnv *env, jobject thisObj, ji
 	// Add value to buffer
 	sem_wait(&sendSpaces);
 	sem_wait(&sendProdMutex);
-//	printf("SendWrite: %d\n", value);
 	sendBuffer[sendIn] = (int) value;
 	sendIn = (sendIn + 1) % N;
 	sem_post(&sendProdMutex);
