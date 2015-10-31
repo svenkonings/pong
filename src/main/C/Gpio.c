@@ -58,7 +58,7 @@ void trigger(void) {
 			sendOut = (sendOut + 1) % N;
 			sem_post(&sendSpaces);
 			// Convert decimal to pins
-			for (int i = 0; i < 15; i++) {
+			for (int i = 14; i >= 0; i--) {
 				digitalWrite(pins[i], (value >> i) & 1);
 			}
 		} else { // Don't want to send
@@ -87,7 +87,7 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 	jmethodID ballY = (*env)->GetMethodID(env, thisClass, "ballY", "(I)V");
 	jmethodID goalLeft = (*env)->GetMethodID(env, thisClass, "goalLeft", "()V");
 	jmethodID goalRight = (*env)->GetMethodID(env, thisClass, "goalRight", "()V");
-	jmethodID collision = (*env)->GetMethodID(env, thisClass, "collsion", "()V");
+	jmethodID collision = (*env)->GetMethodID(env, thisClass, "collision", "()V");
 	// Initialize semaphores
 	sem_init(&receiveElements, 0, 0);
     sem_init(&receiveSpaces, 0, N);

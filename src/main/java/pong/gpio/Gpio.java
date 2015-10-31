@@ -1,6 +1,15 @@
 package pong.gpio;
 
 public class Gpio extends Thread {
+    public static final int CALIBRATION = 1;
+    public static final int MENU = 2;
+    public static final int START_GAME = 3;
+    public static final int AI_1 = 4;
+    public static final int AI_2 = 5;
+    public static final int AI_3 = 6;
+    public static final int PAUSE = 7;
+    public static final int IDLE = 8;
+
     static {
         System.loadLibrary("Gpio");
     }
