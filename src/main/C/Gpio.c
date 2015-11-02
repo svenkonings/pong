@@ -28,13 +28,14 @@ void trigger(void) {
 			for(int i = 0; i < MODE; i++) {
 				mode = mode * 2 + digitalRead(pins[i]);
 			}
-			if (0 == mode) return; // Received nothing
 			int goal = digitalRead(pins[MODE]);
 			int value = 0;
 			for(int i = MODE + 1; i < PINS; i++) {
 				value = value * 2 + digitalRead(pins[i]);
 			}
 			// Write mode, goal and value to buffer
+			printf("RECEIVED: mode = %d, goal = %d, value = %d\n", mode, goal, value);
+			if (0 == mode) return; // Received nothing
 			sem_wait(&receiveSpaces);
 			sem_wait(&receiveProdMutex);
 			receiveBuffer[receiveIn][0] = mode;
@@ -47,7 +48,7 @@ void trigger(void) {
 	} else { // Falling edge
 		int sendData; // Sending data available boolean
 		sem_wait(&sendConsMutex);
-		sem_getvalue(&sendElements, &sendData); 
+		sem_getvalue(&sendElements, &sendData);
 		if (sendData) { // Want to send
 			if (!output) { // Previously not sending
 				// Start sending
@@ -97,9 +98,9 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 	jmethodID calibration = (*env)->GetMethodID(env, thisClass, "calibration", "(I)V");
 	// Initialize semaphores
 	sem_init(&receiveElements, 0, 0);
-    sem_init(&receiveSpaces, 0, BUFFER);
+	sem_init(&receiveSpaces, 0, BUFFER);
 	sem_init(&sendElements, 0, 0);
-    sem_init(&sendSpaces, 0, BUFFER);
+	sem_init(&sendSpaces, 0, BUFFER);
 	sem_init(&receiveProdMutex, 0, 1);
 	sem_init(&sendProdMutex, 0, 1);
 	sem_init(&sendConsMutex, 0, 1);
@@ -146,15 +147,15 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 				(*env)->CallVoidMethod(env, thisObj, ballY, value);
 				break;
 			case 5:
-			    (*env)->CallVoidMethod(env, thisObj, calibration, value);
-			    break;
+				(*env)->CallVoidMethod(env, thisObj, calibration, value);
+				break;
 		}
 	}
 	// Destroy semaphores
 	sem_destroy(&receiveElements);
-    sem_destroy(&receiveSpaces);
+	sem_destroy(&receiveSpaces);
 	sem_destroy(&sendElements);
-    sem_destroy(&sendSpaces);
+	sem_destroy(&sendSpaces);
 	sem_destroy(&receiveProdMutex);
 	sem_destroy(&sendProdMutex);
 	sem_destroy(&sendConsMutex);
@@ -164,6 +165,7 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 // Should only be called while the program is listening
 JNIEXPORT void JNICALL Java_pong_gpio_Gpio_send(JNIEnv *env, jobject thisObj, jint value) {
 	// Write value to buffer
+	printf("SEND: value = %d\n", value);
 	sem_wait(&sendSpaces);
 	sem_wait(&sendProdMutex);
 	sendBuffer[sendIn] = (int) value;
