@@ -15,12 +15,10 @@ public class Controller extends Thread {
     private static GUI mp;
 
     public Controller(GUI menu_pane) {
-        System.out.println("CONTROLLER");
         mp = menu_pane;
     }
 
     public void run() {
-        System.out.println("RUN");
         test();
     }
 
