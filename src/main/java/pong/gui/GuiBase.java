@@ -18,6 +18,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import pong.Fpga;
+import pong.control.BaseController;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -80,6 +81,7 @@ public class GuiBase extends Application{
 
     @Override
     public void start(Stage primaryStage) {
+        (new BaseController(this)).start();
         calibrateGui();
         setUpMenu1();
         setUpStage(primaryStage);
@@ -89,7 +91,7 @@ public class GuiBase extends Application{
         launch(args);
     }
 
-    public void calibrateGui() {
+    public static void calibrateGui() {
         Rectangle2D bounds = Screen.getPrimary().getBounds();
         screen_width = bounds.getWidth();
         screen_height = bounds.getHeight();
@@ -155,9 +157,7 @@ public class GuiBase extends Application{
                 System.out.println("SINGLEPLAYER CLICKED");
                 free(paddle, field);
                 setUpMenu3();
-                synchronized (stage) {
-                    stage.setScene(menu3a);
-                }
+                stage.setScene(menu3a);
             }
         };
         button_sp.addText("Singleplayer");
@@ -168,8 +168,8 @@ public class GuiBase extends Application{
             public void click() {
                 System.out.println("MP CLICKED");
                 free(paddle, field);
-                pane1.getChildren().addAll(field);
-                stage.setScene(menu1);
+                setUpMenu3();
+                stage.setScene(menu3a);
             }
         };
         button_mp.setFill(UNPRESSED);
@@ -186,6 +186,7 @@ public class GuiBase extends Application{
     }
 
     public void setUpMenu3() {
+        System.out.println("MENU 3a YAAY");
         // Buttons
         double[][] dimens = createButtons(3);
         button_ez = new MenuButton(dimens[0][0], dimens[0][1], dimens[0][2], dimens[0][3]) {
@@ -203,7 +204,7 @@ public class GuiBase extends Application{
             public void click() {
                 System.out.println("MED CLICKED");
                 free(paddle, field);
-                pane1.getChildren().addAll(field);
+                pane2.getChildren().addAll(field);
                 stage.setScene(menu1);
             }
         };
@@ -218,16 +219,21 @@ public class GuiBase extends Application{
             }
         };
         button_hd.setFill(UNPRESSED);
+        System.out.println("YAAY 2");
         // Coordinate text
         text3a = new Text("Nothing happened yet.");
         text3a.setFont(new Font("Verdana", 25));
         text3a.setX((screen_width - text2.getBoundsInParent().getWidth()) / 2);
-        text3a.setY(text2.getBoundsInParent().getHeight());
+        text3a.setY(text3a.getBoundsInParent().getHeight());
+        System.out.println("YAAY 3");
         // Pane and scene
         pane3a = new Pane();
         pane3a.setStyle("-fx-background-color: " + BG + ";-fx-padding: 10px;");
+        System.out.println("YAAY 4");
         pane3a.getChildren().addAll(paddle, field, button_ez, button_md, button_hd, text3a);
-        menu2 = new Scene(pane3a, screen_width, screen_height);
+        System.out.println("YAAY 5");
+        menu3a = new Scene(pane3a, screen_width, screen_height);
+        System.out.println("YAAY 6");
     }
 
     public void updatePaddleY(int fpgaY) {
@@ -236,7 +242,7 @@ public class GuiBase extends Application{
         paddle.setY(y);
         text2.setText("SEL = " + selected + ", cnt = " + sel_cnt);
         text2.setX((screen_width - text2.getBoundsInParent().getWidth()) / 2);
-        synchronized (stage) {
+        if (stage.getScene() != null) {
             System.out.println("PREUHM " + stage.getScene().getRoot());
             ObservableList<Node> nodes = stage.getScene().getRoot().getChildrenUnmodifiable();
             System.out.println("UHM " + nodes);

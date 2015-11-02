@@ -34,7 +34,7 @@ public class BaseController extends Thread {
         for (int i = 0; i < 5; i++) {
             sleepAndY(100, 200);
         }
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 30; i++) {
             sleepAndY(200, 500);
         }
     }
@@ -68,7 +68,6 @@ public class BaseController extends Thread {
     }
 
     public static void main(String[] args) {
-        GuiBase gb = new GuiBase();
         (new BaseController(gb)).start();
         gb.main(args);
     }
