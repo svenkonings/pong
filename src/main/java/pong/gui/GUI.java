@@ -1,4 +1,4 @@
-package pong.gui.menu;
+package pong.gui;
 
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -6,25 +6,28 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import pong.Dimen;
+import pong.Fpga;
 import pong.control.Controller;
-import pong.gui.Paddle;
 
 import javax.sound.sampled.*;
 import java.io.*;
 
-public class MenuPane extends Application {
+public class GUI extends Application {
     private static double SCREEN_WIDTH = 1080, SCREEN_HEIGHT = 720; // Default values, would be overwritten immediately
     private static double PADDLE_HEIGHT; // Dependant on screen width and height
     private static double PADDLE_WIDTH = PADDLE_HEIGHT / 4;
     private static double PADDLE_Y = SCREEN_HEIGHT / 2 - PADDLE_HEIGHT / 2;
     private static double PADDLE_X = 20; // Should snap onto playing field
+    private static double FIELD_WIDTH, FIELD_HEIGHT, FIELD_X_OFFSET, FIELD_Y_OFFSET;
     private static Pane pane;
     private static Paddle paddle;
-    private static Button selected;
+    private static MenuButton selected;
+    private static Text t;
+    private static Rectangle field;
 
     public static void main(String[] args) {
         launch(args);
@@ -35,9 +38,9 @@ public class MenuPane extends Application {
         calibrateGui();
 
         // Calibration TODO Move this to Controller.test()
-        Dimen.FPGA_MIN_Y = 100;
-        Dimen.FPGA_MAX_Y = 1100;
-        Dimen.FPGA_PADDLE_HEIGHT = 250;
+        Fpga.MIN_Y = 100;
+        Fpga.MAX_Y = 1100;
+        Fpga.PADDLE_Y = 250;
 
         // Pane set-up
         pane = new Pane();
@@ -45,8 +48,9 @@ public class MenuPane extends Application {
         pane.setMinHeight(SCREEN_HEIGHT);
 //        pane.setVisible(false);
 
+
         // TODO Move this to post-calibration
-        PADDLE_HEIGHT = Dimen.FPGA_PADDLE_HEIGHT * (Dimen.FPGA_MAX_Y - Dimen.FPGA_MIN_Y) / SCREEN_HEIGHT;
+        PADDLE_HEIGHT = Fpga.PADDLE_Y * (Fpga.MAX_Y - Fpga.MIN_Y) / SCREEN_HEIGHT;
         PADDLE_WIDTH = PADDLE_HEIGHT / 4;
         setUpPaddle();
 
@@ -56,6 +60,14 @@ public class MenuPane extends Application {
         stage.setScene(new Scene(pane, SCREEN_WIDTH, SCREEN_HEIGHT));
         stage.show();
 
+        // Field set-up
+        FIELD_WIDTH = pane.getWidth() - 2 * PADDLE_HEIGHT;
+        FIELD_HEIGHT = FIELD_WIDTH / 2;
+        double FIELD_X_OFFSET = PADDLE_HEIGHT, FIELD_Y_OFFSET = (pane.getHeight() - FIELD_HEIGHT) / 2;
+        field = new Rectangle(FIELD_X_OFFSET, FIELD_Y_OFFSET, FIELD_WIDTH, FIELD_HEIGHT);
+        field.setFill(Color.ANTIQUEWHITE);
+        pane.getChildren().add(field);
+
         // Test
         test();
     }
@@ -63,7 +75,8 @@ public class MenuPane extends Application {
     public void setUpPaddle() {
         paddle = new Paddle(PADDLE_WIDTH, PADDLE_HEIGHT);
         paddle.setFill(Color.BLUE);
-        paddle.setX(PADDLE_X);
+        paddle.setX(FIELD_X_OFFSET + PADDLE_X);
+        paddle.setY(FIELD_Y_OFFSET - PADDLE_HEIGHT);
         pane.getChildren().add(paddle);
     }
 
@@ -74,29 +87,30 @@ public class MenuPane extends Application {
         Rectangle2D bounds = Screen.getPrimary().getBounds();
         SCREEN_WIDTH = bounds.getWidth();
         SCREEN_HEIGHT = bounds.getHeight();
-        PADDLE_HEIGHT = SCREEN_HEIGHT * Dimen.FPGA_PADDLE_HEIGHT / (Dimen.FPGA_MAX_Y - Dimen.FPGA_MIN_Y);
+        PADDLE_HEIGHT = SCREEN_HEIGHT * Fpga.PADDLE_Y / (Fpga.MAX_Y - Fpga.MIN_Y);
     }
 
     // Updates the y position of the paddle according to the value given by the FPGA
     public static void updatePaddleY(int fpgaY) {
+        t.setText("Binnengekomen waarde: " + fpgaY);
+        t.setY(FIELD_Y_OFFSET + FIELD_HEIGHT - t.getBoundsInParent().getHeight());
+        t.setX(FIELD_X_OFFSET + (FIELD_WIDTH - t.getBoundsInParent().getWidth())/ 2);
         // Convert from FPGA format to GUI format
-        System.out.println("fpgaY = " + fpgaY + ", pane height = " + pane.getHeight());
-        double y = Dimen.fpga2guiY(fpgaY, pane.getHeight());
-        System.out.println("guiy = " + y + ", paddle height = " + PADDLE_HEIGHT);
+        double y = Fpga.fpga2guiY(fpgaY, pane.getHeight(), PADDLE_HEIGHT);
+        y += FIELD_Y_OFFSET;
         paddle.setY(y);
-        System.out.println("PADDLE W = " + paddle.getWidth() + ", H = " + paddle.getHeight());
         for (Node child : pane.getChildrenUnmodifiable()) {
             // Loop through all the buttons of this pane
-            if (child instanceof Button) {
-                Button button = (Button) child;
-                // Test if the middle of the paddle is somewhere between the top and the bottom of the button
-                if (button.containsY(y + paddle.getHeight() / 2)) {
-                    // Button selected
-                    button.setFill(Color.LIGHTGRAY);
-                    selected = button;
+            if (child instanceof MenuButton) {
+                MenuButton menuButton = (MenuButton) child;
+                // Test if the middle of the paddle is somewhere between the top and the bottom of the menuButton
+                if (menuButton.containsY(y + paddle.getHeight() / 2)) {
+                    // MenuButton selected
+                    menuButton.setFill(Color.LIGHTGRAY);
+                    selected = menuButton;
                 } else {
-                    // Button deselected
-                    button.setFill(Color.DARKGRAY);
+                    // MenuButton deselected
+                    menuButton.setFill(Color.DARKGRAY);
                 }
             }
         }
@@ -128,16 +142,16 @@ public class MenuPane extends Application {
     public static void createButton() {
         int N = 3, margin = 40;
         for (int i = 0; i < N; i++) {
-            double h = (pane.getHeight() - (N + 1) * margin) / N;
-            Button button = new Button(pane.getWidth() * 0.75, h) {
+            double h = (FIELD_Y_OFFSET - (N + 1) * margin) / N;
+            MenuButton menuButton = new MenuButton(FIELD_WIDTH * 0.75, h) {
                 @Override
                 public void click() {
                     System.out.println(paddle.getY());
                 }
             };
-            button.setX((pane.getWidth() - button.getWidth()) / 2);
-            button.setY( i * h + (i + 1) * margin);
-            pane.getChildren().add(button);
+            menuButton.setX(FIELD_X_OFFSET + (FIELD_WIDTH - menuButton.getWidth()) / 2);
+            menuButton.setY(FIELD_Y_OFFSET + i * h + (i + 1) * margin);
+            pane.getChildren().add(menuButton);
         }
     }
 
@@ -147,14 +161,12 @@ public class MenuPane extends Application {
 
     private void test() {
 //        startMusic();
-        System.out.println("TEST");
         createButton();
-        Text t = new Text("Welkom bij PaddleBall. Als je wil beginnen met calibreren, klik op knop 1 van de FPGA.");
+        t = new Text("Welkom bij PaddleBall. Als je wil beginnen met calibreren, klik op knop 1 van de FPGA.");
         pane.getChildren().add(t);
-        t.setY(pane.getHeight() - t.getBoundsInParent().getHeight());
-        t.setX((pane.getWidth() - t.getBoundsInParent().getWidth())/ 2);
+        t.setY(FIELD_Y_OFFSET + FIELD_HEIGHT - t.getBoundsInParent().getHeight());
+        t.setX(FIELD_X_OFFSET + (FIELD_WIDTH - t.getBoundsInParent().getWidth())/ 2);
         (new Controller(this)).start();
-        System.out.println("START DONE");
         click();
     }
 }

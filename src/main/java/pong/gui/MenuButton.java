@@ -1,21 +1,21 @@
-package pong.gui.menu;
+package pong.gui;
 
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
-public abstract class Button extends Rectangle {
-    public Button() {
+public abstract class MenuButton extends Rectangle {
+    public MenuButton() {
     }
 
-    public Button(double width, double height) {
+    public MenuButton(double width, double height) {
         super(width, height);
     }
 
-    public Button(double width, double height, Paint fill) {
+    public MenuButton(double width, double height, Paint fill) {
         super(width, height, fill);
     }
 
-    public Button(double x, double y, double width, double height) {
+    public MenuButton(double x, double y, double width, double height) {
         super(x, y, width, height);
     }
 

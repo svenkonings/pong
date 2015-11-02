@@ -1,11 +1,7 @@
 package pong.control;
 
-import javafx.application.Application;
 import javafx.application.Platform;
-import pong.Dimen;
-import pong.gui.menu.MenuPane;
-
-import java.awt.*;
+import pong.gui.GUI;
 
 /**
  * Created by Lindsay on 29-Oct-15.
@@ -16,9 +12,9 @@ import java.awt.*;
     - Output to [communication]: the GPIO pin handler in C
  */
 public class Controller extends Thread {
-    private static MenuPane mp;
+    private static GUI mp;
 
-    public Controller(MenuPane menu_pane) {
+    public Controller(GUI menu_pane) {
         System.out.println("CONTROLLER");
         mp = menu_pane;
     }
@@ -34,7 +30,7 @@ public class Controller extends Thread {
         for (int i = 0; true; i++) {
             final int x = i;
             try {
-                Thread.sleep((long) 100);
+                Thread.sleep((long) 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -54,6 +50,6 @@ public class Controller extends Thread {
     }
 
     public static void main(String[] args) {
-        MenuPane.main(args);
+        GUI.main(args);
     }
 }

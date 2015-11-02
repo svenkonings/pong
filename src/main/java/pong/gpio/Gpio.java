@@ -44,6 +44,7 @@ public class Gpio extends Thread {
 
             @Override
             public void ballX(int x) {
+
                 System.out.println("ballX: " + x);
             }
 
