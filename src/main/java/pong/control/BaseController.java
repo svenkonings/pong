@@ -37,6 +37,9 @@ public class BaseController extends Thread {
         for (int i = 0; i < 30; i++) {
             sleepAndY(200, 500);
         }
+        for (int i = 0; i < 30; i++) {
+            sleepAndY(200, i * 20);
+        }
     }
 
     public static void sleepAndCal(long ms, int coor) {
