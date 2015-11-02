@@ -28,23 +28,13 @@ public class Gpio extends Thread {
             }
 
             @Override
-            public void paddleRight(int y) {
-                System.out.println("paddleRight: " + y);
-            }
-
-            @Override
-            public void ballX(int x) {
-                System.out.println("ballX: " + x);
-            }
-
-            @Override
-            public void ballY(int y) {
-                System.out.println("ballY: " + y);
-            }
-
-            @Override
             public void goalLeft() {
                 System.out.println("goalLeft");
+            }
+
+            @Override
+            public void paddleRight(int y) {
+                System.out.println("paddleRight: " + y);
             }
 
             @Override
@@ -53,8 +43,23 @@ public class Gpio extends Thread {
             }
 
             @Override
+            public void ballX(int x) {
+                System.out.println("ballX: " + x);
+            }
+
+            @Override
             public void collision() {
                 System.out.println("goalCollision");
+            }
+
+            @Override
+            public void ballY(int y) {
+                System.out.println("ballY: " + y);
+            }
+
+            @Override
+            public void calibration(int value) {
+                System.out.println("calibration: " + value);
             }
         });
         gpio.start();
@@ -78,28 +83,32 @@ public class Gpio extends Thread {
         listener.paddleLeft(y);
     }
 
-    private void paddleRight(int y) {
-        listener.paddleRight(y);
-    }
-
-    private void ballX(int x) {
-        listener.ballX(x);
-    }
-
-    private void ballY(int y) {
-        listener.ballY(y);
-    }
-
     private void goalLeft() {
         listener.goalLeft();
+    }
+
+    private void paddleRight(int y) {
+        listener.paddleRight(y);
     }
 
     private void goalRight() {
         listener.goalRight();
     }
 
+    private void ballX(int x) {
+        listener.ballX(x);
+    }
+
     private void collision() {
         listener.collision();
+    }
+
+    private void ballY(int y) {
+        listener.ballY(y);
+    }
+
+    private void calibration(int value) {
+        listener.calibration(value);
     }
 
     @Override
@@ -110,16 +119,18 @@ public class Gpio extends Thread {
     public interface Listener {
         void paddleLeft(int y);
 
-        void paddleRight(int y);
-
-        void ballX(int x);
-
-        void ballY(int y);
-
         void goalLeft();
+
+        void paddleRight(int y);
 
         void goalRight();
 
+        void ballX(int x);
+
         void collision();
+
+        void ballY(int y);
+
+        void calibration(int value);
     }
 }

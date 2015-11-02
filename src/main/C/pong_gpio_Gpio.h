@@ -13,6 +13,22 @@ extern "C" {
 #define pong_gpio_Gpio_NORM_PRIORITY 5L
 #undef pong_gpio_Gpio_MAX_PRIORITY
 #define pong_gpio_Gpio_MAX_PRIORITY 10L
+#undef pong_gpio_Gpio_CALIBRATION
+#define pong_gpio_Gpio_CALIBRATION 1L
+#undef pong_gpio_Gpio_MENU
+#define pong_gpio_Gpio_MENU 2L
+#undef pong_gpio_Gpio_START_GAME
+#define pong_gpio_Gpio_START_GAME 3L
+#undef pong_gpio_Gpio_AI_1
+#define pong_gpio_Gpio_AI_1 4L
+#undef pong_gpio_Gpio_AI_2
+#define pong_gpio_Gpio_AI_2 5L
+#undef pong_gpio_Gpio_AI_3
+#define pong_gpio_Gpio_AI_3 6L
+#undef pong_gpio_Gpio_PAUSE
+#define pong_gpio_Gpio_PAUSE 7L
+#undef pong_gpio_Gpio_IDLE
+#define pong_gpio_Gpio_IDLE 8L
 /*
  * Class:     pong_gpio_Gpio
  * Method:    listen
