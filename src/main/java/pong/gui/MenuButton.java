@@ -6,25 +6,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-public abstract class MenuButton extends Rectangle {
+public class MenuButton extends Rectangle {
+    private Runnable click;
     private String string;
-
-    public Text getText() {
-        return text;
-    }
-
-    public void setText(Text text) {
-        this.text = text;
-    }
-
-    public String getString() {
-        return string;
-    }
-
-    public void setString(String string) {
-        this.string = string;
-    }
-
     private Text text;
 
     public MenuButton() {
@@ -40,6 +24,30 @@ public abstract class MenuButton extends Rectangle {
 
     public MenuButton(double x, double y, double width, double height) {
         super(x, y, width, height);
+    }
+
+    public Runnable getClick() {
+        return click;
+    }
+
+    public void setClick(Runnable click) {
+        this.click = click;
+    }
+
+    public Text getText() {
+        return text;
+    }
+
+    public void setText(Text text) {
+        this.text = text;
+    }
+
+    public String getString() {
+        return string;
+    }
+
+    public void setString(String string) {
+        this.string = string;
     }
 
     public void addText(String s) {
@@ -58,7 +66,11 @@ public abstract class MenuButton extends Rectangle {
     /**
      * Override this method to add code that is executed when the button is clicked.
      */
-    public abstract void click();
+    public void click() {
+        if (click != null) {
+            click.run();
+        }
+    }
 
     /**
      * Tests if the y coordinate is within the vertical boundaries of the button.
