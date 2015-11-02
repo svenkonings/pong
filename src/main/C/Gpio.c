@@ -64,8 +64,8 @@ void trigger(void) {
 			sendOut = (sendOut + 1) % BUFFER;
 			sem_post(&sendSpaces);
 			// Convert decimal to pins
-			for (int i = PINS - 1; i >= 0; i--) {
-				digitalWrite(pins[i], (value >> i) & 1);
+			for (int i = 0; i < PINS; i++) {
+				digitalWrite(pins[PINS - 1 - i], (value >> i) & 1);
 			}
 		} else { // Don't want to send
 			if (output) { // Previously sending

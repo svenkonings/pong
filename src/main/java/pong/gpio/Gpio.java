@@ -64,14 +64,16 @@ public class Gpio extends Thread {
         });
         gpio.start();
         System.out.println("Called");
+        int count = 0;
         while (true) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 break;
             }
-            gpio.send((int) (Math.random() * 32768)); // number between 0 and 2^15
+            count = (count + 1) % 65535; // count from 0 to 2^16 - 1
+            gpio.send(count);
         }
     }
 
