@@ -30,20 +30,20 @@ public class BaseController extends Thread {
         sleepAndCal(100, 100);
 //        sleepAndCal(1000, 100);
         for (int i = 0; i < 8; i++) {
-            sleepAndY(100, 500, gb.getPaddleLeft());
-            //sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
+            sleepAndY(100, 500, true);
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 5; i++) {
-            sleepAndY(100, 200, gb.getPaddleLeft());
-            //sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
+            sleepAndY(100, 200, true);
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 30; i++) {
-            sleepAndY(100, 200, gb.getPaddleLeft());
-            //sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
+            sleepAndY(100, 200, true);
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 300; i++) {
-            sleepAndY(20, i * 2, gb.getPaddleLeft());
-            //sleepAndY(20, 1080 - i * 2, gb.getPaddleRight());
+            sleepAndY(20, i * 2, true);
+            sleepAndY(20, 1080 - i * 2, false);
             sleepAndBall(20, i * 2, i * 2);
             sleepAndScore(20, true);
         }
@@ -58,14 +58,17 @@ public class BaseController extends Thread {
         Platform.runLater(() -> gb.calibrateFpga(coor));
     }
 
-    public static void sleepAndY(long ms, int coor, Paddle paddle) {
+    public static void sleepAndY(long ms, int coor,boolean left) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        // TODO: fix paddleRight
-        Platform.runLater(() -> gb.updatePaddleLeft(coor));
+        if (left) {
+            Platform.runLater(() -> gb.updatePaddleLeft(coor));
+        } else {
+            Platform.runLater(() -> gb.updatePaddleRight(coor));
+        }
     }
 
     public static void sleepAndBall(long ms, int x, int y) {
