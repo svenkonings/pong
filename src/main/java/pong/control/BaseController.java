@@ -44,9 +44,9 @@ public class BaseController extends Thread {
             sleepAndY(100, 500, gb.getPaddleLeft());
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
-        for (int i = 0; i < 30; i++) {
-            sleepAndY(200, i * 20, gb.getPaddleLeft());
-            sleepAndY(200, 1080 - i * 20, gb.getPaddleRight());
+        for (int i = 0; i < 300; i++) {
+            sleepAndY(20, i * 2, gb.getPaddleLeft());
+            sleepAndY(20, 1080 - i * 2, gb.getPaddleRight());
         }
     }
 

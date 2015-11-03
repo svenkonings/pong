@@ -17,9 +17,6 @@ import pong.Fpga;
 import pong.control.BaseController;
 import pong.gpio.Gpio;
 
-/**
- * Created by Lindsay on 02-Nov-15.
- */
 public class GuiBase extends Application implements Gpio.Listener {
     /* General */
     private Stage stage;
@@ -118,7 +115,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         pane = new Pane();
         pane.setStyle("-fx-background-color: " + BG + ";-fx-padding: 10px;");
         menu = new Scene(pane, screenWidth, screenHeight);
-        // Laffe init to avoid null pointers
+        // Initialize paddles
         paddleLeft = new Paddle();
         paddleRight = new Paddle();
     }
