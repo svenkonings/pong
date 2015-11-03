@@ -2,7 +2,6 @@ package pong.gui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -22,14 +21,16 @@ import pong.gpio.Gpio;
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class GuiBase extends Application implements Gpio.Listener {
     /* General */
     private Gpio gpio;
-    private static boolean GPIO;
+    private static final boolean GPIO = true;
     private Stage stage;
     private Scene menu;
     private Pane pane;
+    private ButtonGroup currentMenu;
     private double screenWidth, screenHeight;
     // Field
     private double fieldHeight, fieldWidth;
@@ -47,7 +48,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     // Selected button
     private MenuButton selected;
     private int selCnt = 0;
-    private static final int SEL_THR = 10, SEL_THR_GPIO = 320;
+    private static final int SEL_THR = GPIO ? 320 : 10;
     // Colors
     private static final Color UNPRESSED = Color.DARKSEAGREEN, PRESSED = Color.SEAGREEN;
     private static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
@@ -64,7 +65,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     Btn: Two player */
     private MenuButton buttonSp, buttonMp;
     private Text spText, text2;
-    private Group group2;
+    private ButtonGroup group2;
 
     /* MENU3A: 1P
     Btn: Easy
@@ -72,7 +73,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     Btn: Hard */
     private MenuButton buttonEz, buttonMd, buttonHd;
     private Text text3a;
-    private Group group3a;
+    private ButtonGroup group3a;
 
     /* MENU3B
     "Calibration: hold the object in front of the sensor and click on button 1 on FPGA to confirm"
@@ -92,12 +93,11 @@ public class GuiBase extends Application implements Gpio.Listener {
     private int goalLeft = 0, goalRight = 0;
 
     public void init() {
-        GPIO = true;
         if (GPIO) {
             gpio = new Gpio(this);
             gpio.start();
         }
-//      playSound("Level_Up.wav");
+//        playSound("Level_Up.wav");
         calibrateGui();
         setUpPane();
         setUpMenu1();
@@ -222,7 +222,10 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void setUpMenu2() {
         // Buttons
-        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.START_GAME);}});
+        MenuButton[] mb = createButtons(2,
+                () -> switchGroup(group3a),
+                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.START_GAME);}}
+        );
         buttonSp = mb[0];
         buttonSp.addText("Singleplayer");
         spText = buttonSp.getText();
@@ -234,16 +237,19 @@ public class GuiBase extends Application implements Gpio.Listener {
         text2.setFont(new Font("Verdana", 25));
         text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         text2.setY(text2.getBoundsInParent().getHeight());
-        group2 = new Group();
-        group2.getChildren().addAll(buttonSp, buttonMp, spText, text2);
+        group2 = new ButtonGroup();
+        group2.addButtons(buttonSp, buttonMp);
+        group2.getChildren().addAll(spText, text2);
         pane.getChildren().addAll(paddleLeft, paddleRight);
     }
 
     public void setUpMenu3a() {
         // Buttons
-        MenuButton[] mb = createButtons(3, () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_1);}},
+        MenuButton[] mb = createButtons(3,
+                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_1);}},
                 () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_2);}},
-                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_3);}});
+                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_3);}}
+        );
         buttonEz = mb[0];
         buttonMd = mb[1];
         buttonHd = mb[2];
@@ -253,8 +259,9 @@ public class GuiBase extends Application implements Gpio.Listener {
         text3a.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         text3a.setY(text3a.getBoundsInParent().getHeight());
         // Group
-        group3a = new Group();
-        group3a.getChildren().addAll(buttonEz, buttonMd, buttonHd, text3a);
+        group3a = new ButtonGroup();
+        group3a.addButtons(buttonEz, buttonMd, buttonHd);
+        group3a.getChildren().add(text3a);
     }
 
     public void setUpMenu3b() {
@@ -300,47 +307,34 @@ public class GuiBase extends Application implements Gpio.Listener {
 //        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
 //        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         // Only the left paddle will control the menu!
-        if (stage.getScene() != null && paddle == paddleLeft) {
-//            System.out.println("update left paddle fpgaY = " + fpgaY + ", guiY = " + y);
-            ObservableList<Node> nodes = stage.getScene().getRoot().getChildrenUnmodifiable();
-            for (Node child : nodes) {
-                if (child instanceof Group) {
-                    for (Node grandchild : ((Group) child).getChildrenUnmodifiable()) {
-                        // Loop through all the buttons of this pane
-                        if (grandchild instanceof MenuButton) {
-                            MenuButton mb = (MenuButton) grandchild;
-                            // Test if the middle of the paddle is somewhere between the top and the bottom of the menuButton
-                            if (mb.containsY(y + paddle.getHeight() / 2)) {
-                                // MenuButton selected
-                                mb.setFill(PRESSED);
-                                if (selected != null && selected == mb) {
-                                    int thres = GPIO ? SEL_THR_GPIO : SEL_THR;
-                                    if (selCnt == thres) {
-                                        // Pressed the button long enough
-                                        selected = null;
-                                        selCnt = 0;
-                                        mb.click();
-                                    } else {
-                                        // Pressed the button not yet long enough
-                                        selCnt++;
-                                    }
-                                } else {
-                                    // First time on this button
-                                    selected = mb;
-                                    selCnt = 1;
-                                }
-                            } else {
-                                if (selected == mb) {
-                                    // Does not select this button *anymore*
-                                    selected = null;
-                                    selCnt = 0;
-                                } else {
-                                    // Does not select this button
-                                    mb.setFill(UNPRESSED);
-                                }
-                            }
+        if (currentMenu != null && paddleLeft == paddle) {
+            // Loop through all the buttons of this pane
+            for (MenuButton mb : currentMenu.getButtons()) {
+                // Test if the middle of the paddle is somewhere between the top and the bottom of the menuButton
+                if (mb.containsY(y + paddle.getHeight() / 2)) {
+                    if (selected == mb) {
+                        if (selCnt < SEL_THR) {
+                            // Pressed the button not yet long enough
+                            selCnt++;
+                        } else {
+                            // Pressed the button long enough
+                            selected = null;
+                            selCnt = 0;
+                            mb.click();
                         }
+                    } else {
+                        // First time on this button
+                        selected = mb;
+                        selCnt = 1;
+                        // MenuButton selected
+                        mb.setFill(PRESSED);
                     }
+                } else if (selected == mb) {
+                    // Does not select this button *anymore*
+                    selected = null;
+                    selCnt = 0;
+                    // Does not select this button
+                    mb.setFill(UNPRESSED);
                 }
             }
         }
@@ -368,30 +362,22 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void switchGroup(Group group) {
         Pane pane = (Pane) stage.getScene().getRoot();
-        Node unwantedChild = null;
-        for (Node child : pane.getChildren()) {
+        for (Iterator<Node> iterator = pane.getChildren().iterator(); iterator.hasNext();) {
+            Node child = iterator.next();
             if (child instanceof Group) {
-//                System.out.println("PRE \tUNWANTED = " + groupToString((Group) child));
-                unwantedChild = child;
-//            } else {
-//                System.out.println("PRE \tWANTED   = " + child);
+                iterator.remove();
             }
         }
-        if (unwantedChild != null) {
-            pane.getChildren().remove(unwantedChild);
-        }
         if (group != null) {
+            if (group instanceof ButtonGroup) {
+                currentMenu = (ButtonGroup) group;
+            } else {
+                currentMenu = null;
+            }
             pane.getChildren().add(group);
-        } else {
-//            System.out.println("group die je wil adden is null");
-        }
-//        for (Node child : pane.getChildren()) {
-//            if (child instanceof Group) {
-//                System.out.println("POST\tGROUP CHILD = " + groupToString((Group) child));
-//            } else {
-//                System.out.println("POST\tOTHER CHILD = " + child.toString());
-//            }
-//        }
+        }/* else {
+            System.out.println("group die je wil adden is null");
+        }*/
     }
 
     // Expects an array of at least N elements
@@ -417,11 +403,7 @@ public class GuiBase extends Application implements Gpio.Listener {
             AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
             clip.open(ais);
             clip.start();
-        } catch (LineUnavailableException e) {
-            e.printStackTrace();
-        } catch (UnsupportedAudioFileException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -436,43 +418,41 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void paddleLeft(int y) {
-        Platform.runLater(() -> {updatePaddleY(y, paddleLeft);});
+        Platform.runLater(() -> updatePaddleY(y, paddleLeft));
     }
 
     @Override
     public void goalLeft() {
-        Platform.runLater(() -> {updateGoal(true);});
+        Platform.runLater(() -> updateGoal(true));
     }
 
     @Override
     public void paddleRight(int y) {
-        Platform.runLater(() -> {updatePaddleY(y, paddleRight);});
+        Platform.runLater(() -> updatePaddleY(y, paddleRight));
     }
 
     @Override
     public void goalRight() {
-        Platform.runLater(() -> {updateGoal(false);});
+        Platform.runLater(() -> updateGoal(false));
     }
 
     @Override
     public void ballX(int x) {
-        Platform.runLater(() -> {updateBallX(x);});
+        Platform.runLater(() -> updateBallX(x));
     }
 
     @Override
     public void collision() {
-        Platform.runLater(() -> {playSound("ping.wav");});
+        Platform.runLater(() -> playSound("ping.wav"));
     }
 
     @Override
     public void ballY(int y) {
-        Platform.runLater(() -> {updateBallY(y);});
+        Platform.runLater(() -> updateBallY(y));
     }
 
         @Override
     public void calibration(int value) {
-        Platform.runLater(() -> {
-            calibrateFpga(value);}
-        );
+        Platform.runLater(() -> calibrateFpga(value));
     }
 }

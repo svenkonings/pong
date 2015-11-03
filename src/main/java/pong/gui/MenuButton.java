@@ -12,6 +12,7 @@ public class MenuButton extends Rectangle {
     private Text text;
 
     public MenuButton() {
+        super();
     }
 
     public MenuButton(double width, double height) {
