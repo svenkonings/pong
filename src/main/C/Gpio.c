@@ -28,8 +28,8 @@ void trigger(void) {
 			for(int i = 0; i < MODE; i++) {
 				mode = mode * 2 + digitalRead(pins[i]);
 			}
-			if (0 == mode) return; // Received nothing
 			int goal = digitalRead(pins[MODE]);
+			if (0 == mode && 0 == goal) return; // Received nothing
 			int value = 0;
 			for(int i = MODE + 1; i < PINS; i++) {
 				value = value * 2 + digitalRead(pins[i]);
@@ -95,6 +95,7 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 	jmethodID collision = (*env)->GetMethodID(env, thisClass, "collision", "()V");
 	jmethodID ballY = (*env)->GetMethodID(env, thisClass, "ballY", "(I)V");
 	jmethodID calibration = (*env)->GetMethodID(env, thisClass, "calibration", "(I)V");
+	jmethodID pause = (*env)->GetMethodID(env, thisClass, "pause", "()V");
 	// Initialize semaphores
 	sem_init(&receiveElements, 0, 0);
     sem_init(&receiveSpaces, 0, BUFFER);
@@ -124,6 +125,11 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 		sem_post(&receiveSpaces);
 		// Call the methods
 		switch(mode) {
+		    case 0:
+		        if (goal) {
+		            (*env)->CallVoidMethod(env, thisObj, pause);
+		        }
+		        break;
 			case 1:
 				if (goal) {
 					(*env)->CallVoidMethod(env, thisObj, goalLeft);

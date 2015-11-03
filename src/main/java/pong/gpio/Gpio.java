@@ -44,7 +44,6 @@ public class Gpio extends Thread {
 
             @Override
             public void ballX(int x) {
-
                 System.out.println("ballX: " + x);
             }
 
@@ -61,6 +60,11 @@ public class Gpio extends Thread {
             @Override
             public void calibration(int value) {
                 System.out.println("calibration: " + value);
+            }
+
+            @Override
+            public void pause() {
+                System.out.println("pause");
             }
         });
         gpio.start();
@@ -114,6 +118,10 @@ public class Gpio extends Thread {
         listener.calibration(value);
     }
 
+    private void pause() {
+        listener.pause();
+    }
+
     @Override
     public void run() {
         listen();
@@ -135,5 +143,7 @@ public class Gpio extends Thread {
         void ballY(int y);
 
         void calibration(int value);
+
+        void pause();
     }
 }

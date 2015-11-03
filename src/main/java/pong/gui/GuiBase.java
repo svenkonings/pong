@@ -176,14 +176,6 @@ public class GuiBase extends Application implements Gpio.Listener {
         prevCal = coor;
     }
 
-    public Paddle getPaddleLeft() {
-        return paddleLeft;
-    }
-
-    public Paddle getPaddleRight() {
-        return paddleRight;
-    }
-
     public void setUpPaddle(Paddle paddle) {
         paddle.setWidth(paddleWidth);
         paddle.setHeight(paddleLength);
