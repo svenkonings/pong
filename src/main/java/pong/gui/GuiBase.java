@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
@@ -18,9 +19,6 @@ import pong.Fpga;
 import pong.control.BaseController;
 import pong.gpio.Gpio;
 
-import javax.sound.sampled.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 
 public class GuiBase extends Application implements Gpio.Listener {
@@ -50,7 +48,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     private int selCnt = 0;
     private static final int SEL_THR = GPIO ? 320 : 10;
     // Colors
-    private static final Color UNPRESSED = Color.DARKSEAGREEN, PRESSED = Color.SEAGREEN;
+    private static final Color PRESSED = Color.MEDIUMSEAGREEN, UNPRESSED = Color.SEAGREEN;
     private static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
     private static final String BG = "white";
 
@@ -64,7 +62,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     Btn: Single player
     Btn: Two player */
     private MenuButton buttonSp, buttonMp;
-    private Text spText, text2;
+    private Text textSp,textMp, text2;
     private ButtonGroup group2;
 
     /* MENU3A: 1P
@@ -87,7 +85,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     Debug values in bottom */
     private Text text4;
     private Circle ball;
-    private static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.25;
+    private static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.125; // which is 1/2 of to ball diameter
     private double ballWidth;
     private Group group4;
     private int goalLeft = 0, goalRight = 0;
@@ -224,10 +222,9 @@ public class GuiBase extends Application implements Gpio.Listener {
                 () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.START_GAME);}}
         );
         buttonSp = mb[0];
-        buttonSp.addText("Singleplayer");
-        spText = buttonSp.getText();
-//        System.out.println("SP text (x, y) = " + spText.getX() + ", " + spText.getY());
+        textSp = buttonSp.addText("Singleplayer");
         buttonMp = mb[1];
+        textMp = buttonMp.addText("Multiplayer");
         // Coordinate text
         String s = "FPGA: min_y=" + Fpga.MIN_Y + ", paddle_y=" + Fpga.PADDLE_Y + ", max_y=" + Fpga.MAX_Y + "\npaddle_length=" + Fpga.PADDLE_LENGTH + ", height=" + Fpga.HEIGHT + ", width=" + Fpga.WIDTH;
         text2 = new Text(s);
@@ -236,7 +233,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         text2.setY(text2.getBoundsInParent().getHeight());
         group2 = new ButtonGroup();
         group2.addButtons(buttonSp, buttonMp);
-        group2.getChildren().addAll(spText, text2);
+        group2.getChildren().addAll(textSp, textMp, text2);
         pane.getChildren().addAll(paddleLeft, paddleRight);
     }
 
@@ -317,6 +314,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                             // Pressed the button long enough
                             selected = null;
                             selCnt = 0;
+                            mb.setFill(PRESSED);
                             mb.click();
                         }
                     } else {
@@ -324,7 +322,9 @@ public class GuiBase extends Application implements Gpio.Listener {
                         selected = mb;
                         selCnt = 1;
                         // MenuButton selected
-                        mb.setFill(PRESSED);
+                        mb.setStrokeWidth(mb.getHeight() / 20);
+                        mb.setStroke(PRESSED);
+                        mb.setStrokeType(StrokeType.INSIDE);
                     }
                 } else if (selected == mb) {
                     // Does not select this button *anymore*
@@ -332,6 +332,8 @@ public class GuiBase extends Application implements Gpio.Listener {
                     selCnt = 0;
                     // Does not select this button
                     mb.setFill(UNPRESSED);
+                    mb.setStroke(UNPRESSED);
+                    mb.setStrokeWidth(0);
                 }
             }
         }
@@ -372,9 +374,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                 currentMenu = null;
             }
             pane.getChildren().add(group);
-        }/* else {
-            System.out.println("group die je wil adden is null");
-        }*/
+        }
     }
 
     // Expects an array of at least N elements
@@ -395,14 +395,20 @@ public class GuiBase extends Application implements Gpio.Listener {
     }
 
     public void playSound(String fileName) {
-        try {
-            Clip clip = AudioSystem.getClip();
-            AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
-            clip.open(ais);
-            clip.start();
-        } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
-            e.printStackTrace();
-        }
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                try {
+//                    Clip clip = AudioSystem.getClip();
+//                    AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
+//                    clip.open(ais);
+//                    clip.start();
+//                } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }.start();
+//        (new Thread(new MediaPlayer(fileName))).start();
     }
 
     public double getFieldHeight() {
@@ -411,6 +417,10 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public static double getPaddleLengthToBallRadius() {
         return PADDLE_LENGTH_TO_BALL_RADIUS;
+    }
+
+    public static Color getPRESSED() {
+        return PRESSED;
     }
 
     @Override
@@ -440,7 +450,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void collision() {
-        Platform.runLater(() -> playSound("ping.wav"));
+        playSound("ping.wav");
     }
 
     @Override

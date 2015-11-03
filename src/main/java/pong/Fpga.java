@@ -58,7 +58,6 @@ public class Fpga {
             }
         }
         PADDLE_LENGTH = PADDLE_Y - MIN_Y;
-//        MAX_Y = MAX_Y - PADDLE_LENGTH;
         HEIGHT = MAX_Y - MIN_Y;
         WIDTH = 2 * HEIGHT;
         System.out.println(MIN_Y + ", " + PADDLE_Y + ", " + MAX_Y);
@@ -73,6 +72,12 @@ public class Fpga {
      * @return y-coordinate of the top of the paddle in GUI format
      */
     public static double convertPaddleY(int fpgaY, double field_height) {
+        // Filter extreme values as they are not all filtered at the FPGA side
+        if (fpgaY < MIN_Y) {
+            fpgaY = (int) MIN_Y;
+        } else if (fpgaY > MAX_Y - PADDLE_LENGTH) {
+            fpgaY = (int) (MAX_Y - PADDLE_LENGTH);
+        }
         // GUI y coordinate of the bottom of the paddle
         double y = field_height - ((fpgaY - MIN_Y) / HEIGHT) * field_height;
 //        System.out.println("gui y = " + y);
@@ -99,7 +104,7 @@ public class Fpga {
     }
 
     public static double convertBallX(int fpgaX, double field_width) {
-        return field_width * fpgaX / WIDTH + PADDLE_LENGTH * GuiBase.getPaddleLengthToBallRadius();
+        return field_width * fpgaX / WIDTH + 2 * PADDLE_LENGTH * GuiBase.getPaddleLengthToBallRadius();
     }
 
     public static void main(String[] args) {
