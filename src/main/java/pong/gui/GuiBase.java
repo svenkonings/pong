@@ -92,7 +92,8 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Group group4;
     private int goalLeft = 0, goalRight = 0;
 
-    public void init() {
+    @Override
+    public void start(Stage primaryStage) {
         if (GPIO) {
             gpio = new Gpio(this);
             gpio.start();
@@ -105,10 +106,6 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu3a();
         setUpMenu3b();
         setUpMenu4();
-    }
-
-    @Override
-    public void start(Stage primaryStage) {
         setUpStage(primaryStage);
         if (GPIO) {
             gpio.send(Gpio.CALIBRATION);
