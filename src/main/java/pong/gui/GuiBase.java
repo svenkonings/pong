@@ -30,6 +30,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Pane pane;
     private ButtonGroup currentMenu;
     private double screenWidth, screenHeight;
+    private int currentMode;
     // Field
     private double fieldHeight, fieldWidth;
     private static final double SCREEN_TO_FIELD_WIDTH = 9.0 / 10.0;
@@ -108,9 +109,8 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu3b();
         setUpMenu4();
         setUpStage(primaryStage);
-        if (GPIO) {
-            gpio.send(Gpio.CALIBRATION);
-        } else {
+        send(Gpio.CALIBRATION);
+        if (!GPIO){
             (new BaseController(this)).start();
         }
     }
@@ -168,9 +168,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                 setUpPaddle(paddleRight);
                 setUpBall();
                 switchGroup(group2);
-                if (GPIO) {
-                    gpio.send(Gpio.MENU);
-                }
+                send(Gpio.MENU);
             }
         }
         prevCal = coor;
@@ -218,7 +216,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         // Buttons
         MenuButton[] mb = createButtons(2,
                 () -> switchGroup(group3a),
-                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.START_GAME);}}
+                () -> {switchGroup(group4); send(Gpio.START_GAME);}
         );
         buttonSp = mb[0];
         textSp = buttonSp.addText("Singleplayer");
@@ -239,9 +237,9 @@ public class GuiBase extends Application implements Gpio.Listener {
     public void setUpMenu3a() {
         // Buttons
         MenuButton[] mb = createButtons(3,
-                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_1);}},
-                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_2);}},
-                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_3);}}
+                () -> {switchGroup(group4); send(Gpio.AI_1);},
+                () -> {switchGroup(group4); send(Gpio.AI_2);},
+                () -> {switchGroup(group4); send(Gpio.AI_3);}
         );
         buttonEz = mb[0];
         buttonMd = mb[1];
@@ -280,6 +278,13 @@ public class GuiBase extends Application implements Gpio.Listener {
 //        System.out.println(ball);
         group4 = new Group();
         group4.getChildren().addAll(ball, text4);
+    }
+
+    public void send(int mode) {
+        currentMode = mode;
+        if (GPIO) {
+            gpio.send(mode);
+        }
     }
 
     public void updateGoal(boolean left) {
