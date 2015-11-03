@@ -27,6 +27,8 @@ import java.io.IOException;
  */
 public class GuiBase extends Application implements Gpio.Listener {
     /* General */
+    private Gpio gpio;
+    private static boolean GPIO;
     private Stage stage;
     private Scene menu;
     private Pane pane;
@@ -93,8 +95,11 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void start(Stage primaryStage) {
-//        gpio = new Gpio(this);
-//        gpio.start();
+        GPIO = true;
+        if (GPIO) {
+            gpio = new Gpio(this);
+            gpio.start();
+        }
 //        playSound("Level_Up.wav");
         calibrateGui();
         setUpPane();
@@ -104,7 +109,11 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu3b();
         setUpMenu4();
         setUpStage(primaryStage);
-        (new BaseController(this)).start();
+        if (GPIO) {
+            gpio.send(Gpio.CALIBRATION);
+        } else {
+            (new BaseController(this)).start();
+        }
     }
 
     public static void main(String[] args) {
@@ -155,6 +164,9 @@ public class GuiBase extends Application implements Gpio.Listener {
                 setUpPaddle(paddleRight);
                 setUpBall();
                 switchGroup(group2);
+                if (GPIO) {
+                    gpio.send(Gpio.MENU);
+                }
             }
             prevCal = coor;
         }
@@ -208,7 +220,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void setUpMenu2() {
         // Buttons
-        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> switchGroup(group4));
+        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.START_GAME);}});
         buttonSp = mb[0];
         buttonSp.addText("Singleplayer");
         spText = buttonSp.getText();
@@ -226,7 +238,9 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void setUpMenu3a() {
         // Buttons
-        MenuButton[] mb = createButtons(3, () -> switchGroup(group4), () -> switchGroup(group4), () -> {System.out.println("Wut"); switchGroup(group4);});
+        MenuButton[] mb = createButtons(3, () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_1);}},
+                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_2);}},
+                () -> {switchGroup(group4); if (GPIO) {gpio.send(Gpio.AI_3);}});
         buttonEz = mb[0];
         buttonMd = mb[1];
         buttonHd = mb[2];
