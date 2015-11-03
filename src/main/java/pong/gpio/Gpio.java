@@ -63,8 +63,8 @@ public class Gpio extends Thread {
             }
 
             @Override
-            public void pause() {
-                System.out.println("pause");
+            public void pause(int y) {
+                System.out.println("pause: " + y);
             }
         });
         gpio.start();
@@ -118,8 +118,8 @@ public class Gpio extends Thread {
         listener.calibration(value);
     }
 
-    private void pause() {
-        listener.pause();
+    private void pause(int y) {
+        listener.pause(y);
     }
 
     @Override
@@ -144,6 +144,6 @@ public class Gpio extends Thread {
 
         void calibration(int value);
 
-        void pause();
+        void pause(int y);
     }
 }

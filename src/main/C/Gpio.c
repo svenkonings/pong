@@ -95,7 +95,7 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 	jmethodID collision = (*env)->GetMethodID(env, thisClass, "collision", "()V");
 	jmethodID ballY = (*env)->GetMethodID(env, thisClass, "ballY", "(I)V");
 	jmethodID calibration = (*env)->GetMethodID(env, thisClass, "calibration", "(I)V");
-	jmethodID pause = (*env)->GetMethodID(env, thisClass, "pause", "()V");
+	jmethodID pause = (*env)->GetMethodID(env, thisClass, "pause", "(I)V");
 	// Initialize semaphores
 	sem_init(&receiveElements, 0, 0);
     sem_init(&receiveSpaces, 0, BUFFER);
@@ -127,7 +127,7 @@ JNIEXPORT void JNICALL Java_pong_gpio_Gpio_listen(JNIEnv *env, jobject thisObj) 
 		switch(mode) {
 		    case 0:
 		        if (goal) {
-		            (*env)->CallVoidMethod(env, thisObj, pause);
+		            (*env)->CallVoidMethod(env, thisObj, pause, value);
 		        }
 		        break;
 			case 1:
