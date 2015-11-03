@@ -76,14 +76,18 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Group group3b;
 
     @Override
-    public void start(Stage primaryStage) {
-//        gpio = new Gpio(this);
-//        gpio.start();
+    public void init() {
+//      gpio = new Gpio(this);
+//      gpio.start();
         calibrateGui();
         setUpPane();
         setUpMenu1();
         setUpMenu2();
         setUpMenu3a();
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
         setUpStage(primaryStage);
         (new BaseController(this)).start();
     }
