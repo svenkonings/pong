@@ -290,6 +290,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     public void setUpMenu5() {
         MenuButton[] mb = createButtons(1, () -> {switchGroup(group4); send(currentMode);});
         buttonRs = mb[0];
+        buttonRs.addText("Resume");
         text5 = new Text("Pause");
         text5.setFont(new Font("Verdana", 25));
         text5.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
