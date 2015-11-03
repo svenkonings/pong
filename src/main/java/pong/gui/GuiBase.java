@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -16,6 +17,10 @@ import javafx.stage.Stage;
 import pong.Fpga;
 import pong.control.BaseController;
 import pong.gpio.Gpio;
+
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Lindsay on 02-Nov-15.
@@ -26,7 +31,6 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Scene menu;
     private Pane pane;
     private double screenWidth, screenHeight;
-    private Gpio gpio;
     // Field
     private double fieldHeight, fieldWidth;
     private static final double SCREEN_TO_FIELD_WIDTH = 9.0 / 10.0;
@@ -65,28 +69,40 @@ public class GuiBase extends Application implements Gpio.Listener {
     /* MENU3A: 1P
     Btn: Easy
     Btn: Medium
-    Btn: Hard
-     */
+    Btn: Hard */
     private MenuButton buttonEz, buttonMd, buttonHd;
     private Text text3a;
     private Group group3a;
 
     /* MENU3B
     "Calibration: hold the object in front of the sensor and click on button 1 on FPGA to confirm"
-    Arrows (rightupper, middle, lower): images
-     */
+    Arrows (rightupper, middle, lower): images */
     private Text text3b;
     private Group group3b;
+
+    /* MENU4
+    Scores: player1 - player2
+    Ball
+    Debug values in bottom */
+    private Text text4;
+    private Circle ball;
+    private static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.25;
+    private double ballWidth;
+    private Group group4;
+    private int goalLeft = 0, goalRight = 0;
 
     @Override
     public void start(Stage primaryStage) {
 //        gpio = new Gpio(this);
 //        gpio.start();
+//        playSound("Level_Up.wav");
         calibrateGui();
         setUpPane();
         setUpMenu1();
         setUpMenu2();
         setUpMenu3a();
+        setUpMenu3b();
+        setUpMenu4();
         setUpStage(primaryStage);
         (new BaseController(this)).start();
     }
@@ -121,6 +137,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         // Laffe init to avoid null pointers
         paddleLeft = new Paddle();
         paddleRight = new Paddle();
+        ball = new Circle();
     }
 
     // Updates calibration values and dependancies
@@ -136,6 +153,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                 System.out.println("GUI: " + paddleLength + ", " + paddleWidth);
                 setUpPaddle(paddleLeft);
                 setUpPaddle(paddleRight);
+                setUpBall();
                 switchGroup(group2);
             }
             prevCal = coor;
@@ -162,6 +180,14 @@ public class GuiBase extends Application implements Gpio.Listener {
         paddle.setY(fieldY);
     }
 
+    public void setUpBall() {
+        ballWidth = paddleLength * PADDLE_LENGTH_TO_BALL_RADIUS;
+        ball.setRadius(ballWidth);
+        ball.setFill(PADDLE_COLOR);
+        ball.setCenterX(fieldX + fieldWidth / 2);
+        ball.setCenterY(fieldY + fieldHeight / 2);
+    }
+
     public void setUpStage(Stage primaryStage) {
         stage = primaryStage;
         stage.setTitle("Swipe ball");
@@ -171,8 +197,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     }
 
     public void setUpMenu1() {
-        // Nodes
-        text1 = new Text("Calibration time! Waiting for calibration values...");
+        text1 = new Text("Calibration time! Waiting for calibration values of left paddle...");
         text1.setFont(new Font("Verdana", 25));
         text1.setX((screenWidth - text1.getBoundsInParent().getWidth()) / 2);
         text1.setY(text1.getBoundsInParent().getHeight());
@@ -183,10 +208,11 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void setUpMenu2() {
         // Buttons
-        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> switchGroup(group1));
+        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> switchGroup(group4));
         buttonSp = mb[0];
         buttonSp.addText("Singleplayer");
         spText = buttonSp.getText();
+        System.out.println("SP text (x, y) = " + spText.getX() + ", " + spText.getY());
         buttonMp = mb[1];
         // Coordinate text
         text2 = new Text("Nothing happened yet.");
@@ -200,7 +226,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     public void setUpMenu3a() {
         // Buttons
-        MenuButton[] mb = createButtons(3, () -> switchGroup(group1), () -> switchGroup(group1), () -> switchGroup(group1));
+        MenuButton[] mb = createButtons(3, () -> switchGroup(group4), () -> switchGroup(group4), () -> {System.out.println("Wut"); switchGroup(group4);});
         buttonEz = mb[0];
         buttonMd = mb[1];
         buttonHd = mb[2];
@@ -214,8 +240,44 @@ public class GuiBase extends Application implements Gpio.Listener {
         group3a.getChildren().addAll(buttonEz, buttonMd, buttonHd, text3a);
     }
 
+    public void setUpMenu3b() {
+        text3b = new Text("Calibration time! Waiting for calibration values of right paddle...\nOh wait we don't do that anymore ;(");
+        text3b.setFont(new Font("Verdana", 25));
+        text3b.setX((screenWidth - text3b.getBoundsInParent().getWidth()) / 2);
+        text3b.setY(text3b.getBoundsInParent().getHeight());
+        group3b = new Group();
+        group3b.getChildren().add(text3b);
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        switchGroup(group4);
+    }
+
+    public void setUpMenu4() {
+        text4 = new Text(goalLeft + " - " + goalRight);
+        text4.setFont(new Font("Verdana", 25));
+        text4.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
+        text4.setY(text3b.getBoundsInParent().getHeight());
+        System.out.println(ball);
+        group4 = new Group();
+        group4.getChildren().addAll(ball, text4);
+    }
+
+    public void updateGoal(boolean left) {
+        if (left) {
+            goalLeft++;
+        } else {
+            goalRight++;
+        }
+        text4.setText(goalLeft + " - " + goalRight);
+        text4.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
+        playSound("whoosh.wav");
+    }
+
     public void updatePaddleY(int fpgaY, Paddle paddle) {
-        double y = Fpga.fpga2guiY(fpgaY, fieldHeight, paddleLength);
+        double y = Fpga.convertPaddleY(fpgaY, fieldHeight);
         y += fieldY;
         paddle.setY(y);
         text2.setText("SEL = " + selected + ", cnt = " + selCnt);
@@ -265,6 +327,18 @@ public class GuiBase extends Application implements Gpio.Listener {
         }
     }
 
+    public void updateBallY(int fpgaY) {
+        double y = Fpga.convertBallY(fpgaY, fieldHeight);
+        y += fieldY;
+        ball.setCenterY(y);
+    }
+
+    public void updateBallX(int fpgaX) {
+        double x = Fpga.convertBallX(fpgaX, fieldWidth);
+        x += fieldX;
+        ball.setCenterX(x);
+    }
+
     public static String groupToString(Group group) {
         String s = "Group = [";
         for (Node n : group.getChildren()) {
@@ -278,24 +352,27 @@ public class GuiBase extends Application implements Gpio.Listener {
         Node unwantedChild = null;
         for (Node child : pane.getChildren()) {
             if (child instanceof Group) {
-                System.out.println("PRE \tUNWANTED = " + groupToString((Group) child));
+//                System.out.println("PRE \tUNWANTED = " + groupToString((Group) child));
                 unwantedChild = child;
-                break;
-            } else {
-                System.out.println("PRE \tWANTED   = " + child);
+//            } else {
+//                System.out.println("PRE \tWANTED   = " + child);
             }
         }
         if (unwantedChild != null) {
             pane.getChildren().remove(unwantedChild);
         }
-        pane.getChildren().add(group);
-        for (Node child : pane.getChildren()) {
-            if (child instanceof Group) {
-                System.out.println("POST\tGROUP CHILD = " + groupToString((Group) child));
-            } else {
-                System.out.println("POST\tOTHER CHILD = " + child.toString());
-            }
+        if (group != null) {
+            pane.getChildren().add(group);
+        } else {
+            System.out.println("group die je wil adden is null");
         }
+//        for (Node child : pane.getChildren()) {
+//            if (child instanceof Group) {
+//                System.out.println("POST\tGROUP CHILD = " + groupToString((Group) child));
+//            } else {
+//                System.out.println("POST\tOTHER CHILD = " + child.toString());
+//            }
+//        }
     }
 
     // Expects an array of at least N elements
@@ -315,8 +392,27 @@ public class GuiBase extends Application implements Gpio.Listener {
         return mb;
     }
 
+    public void playSound(String fileName) {
+        try {
+            Clip clip = AudioSystem.getClip();
+            AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
+            clip.open(ais);
+            clip.start();
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        } catch (UnsupportedAudioFileException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public double getFieldHeight() {
         return fieldHeight;
+    }
+
+    public static double getPaddleLengthToBallRadius() {
+        return PADDLE_LENGTH_TO_BALL_RADIUS;
     }
 
     @Override
@@ -326,7 +422,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void goalLeft() {
-
+        updateGoal(true);
     }
 
     @Override
@@ -336,22 +432,22 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void goalRight() {
-
+        updateGoal(false);
     }
 
     @Override
     public void ballX(int x) {
-
+        updateBallX(x);
     }
 
     @Override
     public void collision() {
-
+        playSound("ping.wav");
     }
 
     @Override
     public void ballY(int y) {
-
+        updateBallY(y);
     }
 
     @Override

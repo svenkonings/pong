@@ -96,7 +96,7 @@ public class GUI extends Application {
         t.setY(FIELD_Y_OFFSET + FIELD_HEIGHT - t.getBoundsInParent().getHeight());
         t.setX(FIELD_X_OFFSET + (FIELD_WIDTH - t.getBoundsInParent().getWidth())/ 2);
         // Convert from FPGA format to GUI format
-        double y = Fpga.fpga2guiY(fpgaY, pane.getHeight(), PADDLE_HEIGHT);
+        double y = Fpga.convertPaddleY(fpgaY, pane.getHeight());
         y += FIELD_Y_OFFSET;
         paddle.setY(y);
         for (Node child : pane.getChildrenUnmodifiable()) {

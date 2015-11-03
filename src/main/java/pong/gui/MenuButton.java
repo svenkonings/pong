@@ -59,6 +59,7 @@ public class MenuButton extends Rectangle {
 
     public void locateText() {
         Bounds bounds = text.getBoundsInParent();
+        System.out.println("bounds = " + bounds);
         text.setX(getX() + (getWidth() - bounds.getWidth()) / 2);
         text.setY(getY() + (getHeight() - bounds.getHeight()) / 2);
     }
