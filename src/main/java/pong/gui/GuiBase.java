@@ -94,6 +94,12 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Group group4;
     private int goalLeft = 0, goalRight = 0;
 
+    /* MENU5:
+    Btn: Resume */
+    private MenuButton buttonRs;
+    private Text text5;
+    private ButtonGroup group5;
+
     @Override
     public void start(Stage primaryStage) {
         if (GPIO) {
@@ -108,6 +114,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu3a();
         setUpMenu3b();
         setUpMenu4();
+        setUpMenu5();
         setUpStage(primaryStage);
         send(Gpio.CALIBRATION);
         if (!GPIO){
@@ -278,6 +285,18 @@ public class GuiBase extends Application implements Gpio.Listener {
 //        System.out.println(ball);
         group4 = new Group();
         group4.getChildren().addAll(ball, text4);
+    }
+
+    public void setUpMenu5() {
+        MenuButton[] mb = createButtons(1, () -> {switchGroup(group4); send(currentMode);});
+        buttonRs = mb[0];
+        text5 = new Text("Pause");
+        text5.setFont(new Font("Verdana", 25));
+        text5.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
+        text5.setY(text3b.getBoundsInParent().getHeight());
+        group5 = new ButtonGroup();
+        group5.addButtons(buttonRs);
+        group5.getChildren().add(text5);
     }
 
     public void send(int mode) {
@@ -480,8 +499,16 @@ public class GuiBase extends Application implements Gpio.Listener {
         Platform.runLater(() -> updateBallY(y));
     }
 
-        @Override
+    @Override
     public void calibration(int value) {
         Platform.runLater(() -> calibrateFpga(value));
+    }
+
+    @Override
+    public void pause(int y) {
+        if (stage.getScene().getRoot() != group5) {
+            Platform.runLater(() -> switchGroup(group5));
+        }
+        Platform.runLater(() -> updatePaddleLeft(y));
     }
 }
