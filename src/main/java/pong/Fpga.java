@@ -58,6 +58,7 @@ public class Fpga {
             }
         }
         PADDLE_LENGTH = PADDLE_Y - MIN_Y;
+//        MAX_Y = MAX_Y - PADDLE_LENGTH;
         HEIGHT = MAX_Y - MIN_Y;
         WIDTH = 2 * HEIGHT;
         System.out.println(MIN_Y + ", " + PADDLE_Y + ", " + MAX_Y);

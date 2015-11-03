@@ -1,6 +1,7 @@
 package pong.gui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -46,7 +47,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     // Selected button
     private MenuButton selected;
     private int selCnt = 0;
-    private static final int SEL_THR = 10;
+    private static final int SEL_THR = 10, SEL_THR_GPIO = 320;
     // Colors
     private static final Color UNPRESSED = Color.DARKSEAGREEN, PRESSED = Color.SEAGREEN;
     private static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
@@ -125,7 +126,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         screenWidth = bounds.getWidth();
         screenHeight = bounds.getHeight();
         setUpField();
-        System.out.println("SCR: " + screenHeight + ", FIE: " + fieldHeight);
+//        System.out.println("SCR: " + screenHeight + ", FIE: " + fieldHeight);
     }
 
     public void setUpField() {
@@ -152,6 +153,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     // Updates calibration values and dependancies
     public void calibrateFpga(int coor) {
         if (coor != prevCal) {
+//            System.out.println("HURRAY!");
             cal[calCnt] = coor;
             text1.setText(text1.getText() + "\nValue[" + calCnt + "] = " + coor);
             calCnt++;
@@ -159,7 +161,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                 Fpga.calibrate(cal[0], cal[1], cal[2]);
                 paddleLength = fieldHeight * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
                 paddleWidth = paddleLength * PADDLE_LENGTH_TO_WIDTH;
-                System.out.println("GUI: " + paddleLength + ", " + paddleWidth);
+//                System.out.println("GUI: " + paddleLength + ", " + paddleWidth);
                 setUpPaddle(paddleLeft);
                 setUpPaddle(paddleRight);
                 setUpBall();
@@ -168,8 +170,8 @@ public class GuiBase extends Application implements Gpio.Listener {
                     gpio.send(Gpio.MENU);
                 }
             }
-            prevCal = coor;
         }
+        prevCal = coor;
     }
 
     public Paddle getPaddleLeft() {
@@ -224,10 +226,11 @@ public class GuiBase extends Application implements Gpio.Listener {
         buttonSp = mb[0];
         buttonSp.addText("Singleplayer");
         spText = buttonSp.getText();
-        System.out.println("SP text (x, y) = " + spText.getX() + ", " + spText.getY());
+//        System.out.println("SP text (x, y) = " + spText.getX() + ", " + spText.getY());
         buttonMp = mb[1];
         // Coordinate text
-        text2 = new Text("Nothing happened yet.");
+        String s = "FPGA: min_y=" + Fpga.MIN_Y + ", paddle_y=" + Fpga.PADDLE_Y + ", max_y=" + Fpga.MAX_Y + "\npaddle_length=" + Fpga.PADDLE_LENGTH + ", height=" + Fpga.HEIGHT + ", width=" + Fpga.WIDTH;
+        text2 = new Text(s);
         text2.setFont(new Font("Verdana", 25));
         text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         text2.setY(text2.getBoundsInParent().getHeight());
@@ -274,7 +277,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         text4.setFont(new Font("Verdana", 25));
         text4.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
         text4.setY(text3b.getBoundsInParent().getHeight());
-        System.out.println(ball);
+//        System.out.println(ball);
         group4 = new Group();
         group4.getChildren().addAll(ball, text4);
     }
@@ -294,10 +297,11 @@ public class GuiBase extends Application implements Gpio.Listener {
         double y = Fpga.convertPaddleY(fpgaY, fieldHeight);
         y += fieldY;
         paddle.setY(y);
-        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
-        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
+//        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
+//        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         // Only the left paddle will control the menu!
         if (stage.getScene() != null && paddle == paddleLeft) {
+//            System.out.println("update left paddle fpgaY = " + fpgaY + ", guiY = " + y);
             ObservableList<Node> nodes = stage.getScene().getRoot().getChildrenUnmodifiable();
             for (Node child : nodes) {
                 if (child instanceof Group) {
@@ -310,7 +314,8 @@ public class GuiBase extends Application implements Gpio.Listener {
                                 // MenuButton selected
                                 mb.setFill(PRESSED);
                                 if (selected != null && selected == mb) {
-                                    if (selCnt == SEL_THR) {
+                                    int thres = GPIO ? SEL_THR_GPIO : SEL_THR;
+                                    if (selCnt == thres) {
                                         // Pressed the button long enough
                                         selected = null;
                                         selCnt = 0;
@@ -378,7 +383,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         if (group != null) {
             pane.getChildren().add(group);
         } else {
-            System.out.println("group die je wil adden is null");
+//            System.out.println("group die je wil adden is null");
         }
 //        for (Node child : pane.getChildren()) {
 //            if (child instanceof Group) {
@@ -431,41 +436,43 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void paddleLeft(int y) {
-        updatePaddleY(y, paddleLeft);
+        Platform.runLater(() -> {updatePaddleY(y, paddleLeft);});
     }
 
     @Override
     public void goalLeft() {
-        updateGoal(true);
+        Platform.runLater(() -> {updateGoal(true);});
     }
 
     @Override
     public void paddleRight(int y) {
-        updatePaddleY(y, paddleRight);
+        Platform.runLater(() -> {updatePaddleY(y, paddleRight);});
     }
 
     @Override
     public void goalRight() {
-        updateGoal(false);
+        Platform.runLater(() -> {updateGoal(false);});
     }
 
     @Override
     public void ballX(int x) {
-        updateBallX(x);
+        Platform.runLater(() -> {updateBallX(x);});
     }
 
     @Override
     public void collision() {
-        playSound("ping.wav");
+        Platform.runLater(() -> {playSound("ping.wav");});
     }
 
     @Override
     public void ballY(int y) {
-        updateBallY(y);
+        Platform.runLater(() -> {updateBallY(y);});
     }
 
-    @Override
+        @Override
     public void calibration(int value) {
-        calibrateFpga(value);
+        Platform.runLater(() -> {
+            calibrateFpga(value);}
+        );
     }
 }
