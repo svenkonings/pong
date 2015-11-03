@@ -15,32 +15,35 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import pong.Fpga;
 import pong.control.BaseController;
+import pong.gpio.Gpio;
 
 /**
  * Created by Lindsay on 02-Nov-15.
  */
-public class GuiBase extends Application{
+public class GuiBase extends Application implements Gpio.Listener {
     /* General */
     private Stage stage;
     private Scene menu;
     private Pane pane;
-    private double screen_width, screen_height;
+    private double screenWidth, screenHeight;
+    private Gpio gpio;
     // Field
-    private double field_height, field_width;
+    private double fieldHeight, fieldWidth;
     private static final double SCREEN_TO_FIELD_WIDTH = 9.0 / 10.0;
-    private double field_x, field_y;
+    private double fieldX, fieldY;
     private Rectangle field;
     // Paddle
-    private double paddle_length, paddle_width;
-    private double paddle_length_to_width = 0.25;
-    private double paddle_x, paddle_y;
-    private Paddle paddle;
+    private double paddleLength, paddleWidth;
+    private static final double PADDLE_LENGTH_TO_WIDTH = 0.25;
+    private Paddle paddleLeft, paddleRight;
     // Calibration
-    private double[] cal = new double[3];
-    private int cal_cnt = 0;
+    private int[] cal = new int[3];
+    private int calCnt = 0;
+    private int prevCal = 0;
     // Selected button
     private MenuButton selected;
-    private int sel_cnt = 0, sel_thr = 10;
+    private int selCnt = 0;
+    private static final int SEL_THR = 10;
     // Colors
     private static final Color UNPRESSED = Color.DARKSEAGREEN, PRESSED = Color.SEAGREEN;
     private static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
@@ -55,8 +58,8 @@ public class GuiBase extends Application{
     /* MENU2
     Btn: Single player
     Btn: Two player */
-    private MenuButton button_sp, button_mp;
-    private Text sp_text, text2;
+    private MenuButton buttonSp, buttonMp;
+    private Text spText, text2;
     private Group group2;
 
     /* MENU3A: 1P
@@ -64,7 +67,7 @@ public class GuiBase extends Application{
     Btn: Medium
     Btn: Hard
      */
-    private MenuButton button_ez, button_md, button_hd;
+    private MenuButton buttonEz, buttonMd, buttonHd;
     private Text text3a;
     private Group group3a;
 
@@ -77,13 +80,15 @@ public class GuiBase extends Application{
 
     @Override
     public void start(Stage primaryStage) {
-        (new BaseController(this)).start();
+//        gpio = new Gpio(this);
+//        gpio.start();
         calibrateGui();
         setUpPane();
         setUpMenu1();
         setUpMenu2();
         setUpMenu3a();
         setUpStage(primaryStage);
+        (new BaseController(this)).start();
     }
 
     public static void main(String[] args) {
@@ -92,52 +97,69 @@ public class GuiBase extends Application{
 
     public void calibrateGui() {
         Rectangle2D bounds = Screen.getPrimary().getBounds();
-        screen_width = bounds.getWidth();
-        screen_height = bounds.getHeight();
+        screenWidth = bounds.getWidth();
+        screenHeight = bounds.getHeight();
         setUpField();
-        System.out.println("SCR: " + screen_height + ", FIE: " + field_height);
+        System.out.println("SCR: " + screenHeight + ", FIE: " + fieldHeight);
     }
 
     public void setUpField() {
-        field_width = screen_width * SCREEN_TO_FIELD_WIDTH;
-        field_height = field_width / 2;
-        field = new Rectangle(field_width, field_height);
-        field_x = (screen_width - field_width) / 2;
-        field.setX(field_x);
-        field_y = (screen_height - field_height) / 2;
-        field.setY(field_y);
+        fieldWidth = screenWidth * SCREEN_TO_FIELD_WIDTH;
+        fieldHeight = fieldWidth / 2;
+        field = new Rectangle(fieldWidth, fieldHeight);
+        fieldX = (screenWidth - fieldWidth) / 2;
+        field.setX(fieldX);
+        fieldY = (screenHeight - fieldHeight) / 2;
+        field.setY(fieldY);
         field.setFill(FIELD_COLOR);
     }
 
     public void setUpPane() {
         pane = new Pane();
         pane.setStyle("-fx-background-color: " + BG + ";-fx-padding: 10px;");
-        menu = new Scene(pane, screen_width, screen_height);
+        menu = new Scene(pane, screenWidth, screenHeight);
         // Laffe init to avoid null pointers
-        paddle = new Paddle(0, 0);
+        paddleLeft = new Paddle();
+        paddleRight = new Paddle();
     }
 
     // Updates calibration values and dependancies
-    public void calibrateFpga(double coor) {
-        cal[cal_cnt] = coor;
-        text1.setText(text1.getText() + "\nValue[" + cal_cnt + "] = " + coor);
-        cal_cnt++;
-        if (cal_cnt == 3) {
-            Fpga.calibrate(cal[0], cal[1], cal[2]);
-            paddle_length = field_height * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
-            paddle_width = paddle_length * paddle_length_to_width;
-            System.out.println("GUI: " + paddle_length + ", " + paddle_width);
-            setUpPaddle();
-            switchGroup(group2);
+    public void calibrateFpga(int coor) {
+        if (coor != prevCal) {
+            cal[calCnt] = coor;
+            text1.setText(text1.getText() + "\nValue[" + calCnt + "] = " + coor);
+            calCnt++;
+            if (calCnt == 3) {
+                Fpga.calibrate(cal[0], cal[1], cal[2]);
+                paddleLength = fieldHeight * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
+                paddleWidth = paddleLength * PADDLE_LENGTH_TO_WIDTH;
+                System.out.println("GUI: " + paddleLength + ", " + paddleWidth);
+                setUpPaddle(paddleLeft);
+                setUpPaddle(paddleRight);
+                switchGroup(group2);
+            }
+            prevCal = coor;
         }
     }
 
-    public void setUpPaddle() {
-        paddle.setWidth(paddle_width);
-        paddle.setHeight(paddle_length);
+    public Paddle getPaddleLeft() {
+        return paddleLeft;
+    }
+
+    public Paddle getPaddleRight() {
+        return paddleRight;
+    }
+
+    public void setUpPaddle(Paddle paddle) {
+        paddle.setWidth(paddleWidth);
+        paddle.setHeight(paddleLength);
         paddle.setFill(PADDLE_COLOR);
-        paddle.setX(field_x - paddle_width);
-        paddle.setY(field_y);
+        if (paddle == paddleLeft) {
+            paddle.setX(fieldX - paddleWidth);
+        } else if (paddle == paddleRight) {
+            paddle.setX(fieldX + fieldWidth);
+        }
+        paddle.setY(fieldY);
     }
 
     public void setUpStage(Stage primaryStage) {
@@ -152,7 +174,7 @@ public class GuiBase extends Application{
         // Nodes
         text1 = new Text("Calibration time! Waiting for calibration values...");
         text1.setFont(new Font("Verdana", 25));
-        text1.setX((screen_width - text1.getBoundsInParent().getWidth()) / 2);
+        text1.setX((screenWidth - text1.getBoundsInParent().getWidth()) / 2);
         text1.setY(text1.getBoundsInParent().getHeight());
         group1 = new Group();
         group1.getChildren().add(text1);
@@ -161,79 +183,45 @@ public class GuiBase extends Application{
 
     public void setUpMenu2() {
         // Buttons
-        double[][] dimens = createButtons(2);
-        button_sp = new MenuButton(dimens[0][0], dimens[0][1], dimens[0][2], dimens[0][3]) {
-            @Override
-            public void click() {
-                System.out.println("SINGLEPLAYER CLICKED");
-                switchGroup(group3a);
-            }
-        };
-        button_sp.addText("Singleplayer");
-        sp_text = button_sp.getText();
-        button_sp.setFill(UNPRESSED);
-        button_mp = new MenuButton(dimens[1][0], dimens[1][1], dimens[1][2], dimens[1][3]) {
-            @Override
-            public void click() {
-                System.out.println("MP CLICKED");
-                switchGroup(group1);
-            }
-        };
-        button_mp.setFill(UNPRESSED);
+        MenuButton[] mb = createButtons(2, () -> switchGroup(group3a), () -> switchGroup(group1));
+        buttonSp = mb[0];
+        buttonSp.addText("Singleplayer");
+        spText = buttonSp.getText();
+        buttonMp = mb[1];
         // Coordinate text
         text2 = new Text("Nothing happened yet.");
         text2.setFont(new Font("Verdana", 25));
-        text2.setX((screen_width - text2.getBoundsInParent().getWidth()) / 2);
+        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         text2.setY(text2.getBoundsInParent().getHeight());
         group2 = new Group();
-        group2.getChildren().addAll(button_sp, button_mp, sp_text, text2);
-        pane.getChildren().add(paddle);
+        group2.getChildren().addAll(buttonSp, buttonMp, spText, text2);
+        pane.getChildren().addAll(paddleLeft, paddleRight);
     }
 
     public void setUpMenu3a() {
         // Buttons
-        double[][] dimens = createButtons(3);
-        button_ez = new MenuButton(dimens[0][0], dimens[0][1], dimens[0][2], dimens[0][3]) {
-            @Override
-            public void click() {
-                System.out.println("EZ CLICKED");
-                switchGroup(group2);
-            }
-        };
-        button_ez.setFill(UNPRESSED);
-        button_md = new MenuButton(dimens[1][0], dimens[1][1], dimens[1][2], dimens[1][3]) {
-            @Override
-            public void click() {
-                System.out.println("MED CLICKED");
-                switchGroup(group2);
-            }
-        };
-        button_md.setFill(UNPRESSED);
-        button_hd = new MenuButton(dimens[2][0], dimens[2][1], dimens[2][2], dimens[2][3]) {
-            @Override
-            public void click() {
-                System.out.println("HARD CLICKED");
-                switchGroup(group2);
-            }
-        };
-        button_hd.setFill(UNPRESSED);
+        MenuButton[] mb = createButtons(3, () -> switchGroup(group1), () -> switchGroup(group1), () -> switchGroup(group1));
+        buttonEz = mb[0];
+        buttonMd = mb[1];
+        buttonHd = mb[2];
         // Coordinate text
         text3a = new Text("Nothing happened yet.");
         text3a.setFont(new Font("Verdana", 25));
-        text3a.setX((screen_width - text2.getBoundsInParent().getWidth()) / 2);
+        text3a.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         text3a.setY(text3a.getBoundsInParent().getHeight());
         // Group
         group3a = new Group();
-        group3a.getChildren().addAll(button_ez, button_md, button_hd, text3a);
+        group3a.getChildren().addAll(buttonEz, buttonMd, buttonHd, text3a);
     }
 
-    public void updatePaddleY(int fpgaY) {
-        double y = Fpga.fpga2guiY(fpgaY, field_height, paddle_length);
-        y += field_y;
+    public void updatePaddleY(int fpgaY, Paddle paddle) {
+        double y = Fpga.fpga2guiY(fpgaY, fieldHeight, paddleLength);
+        y += fieldY;
         paddle.setY(y);
-        text2.setText("SEL = " + selected + ", cnt = " + sel_cnt);
-        text2.setX((screen_width - text2.getBoundsInParent().getWidth()) / 2);
-        if (stage.getScene() != null) {
+        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
+        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
+        // Only the left paddle will control the menu!
+        if (stage.getScene() != null && paddle == paddleLeft) {
             ObservableList<Node> nodes = stage.getScene().getRoot().getChildrenUnmodifiable();
             for (Node child : nodes) {
                 if (child instanceof Group) {
@@ -246,25 +234,25 @@ public class GuiBase extends Application{
                                 // MenuButton selected
                                 mb.setFill(PRESSED);
                                 if (selected != null && selected == mb) {
-                                    if (sel_cnt == sel_thr) {
+                                    if (selCnt == SEL_THR) {
                                         // Pressed the button long enough
                                         selected = null;
-                                        sel_cnt = 0;
+                                        selCnt = 0;
                                         mb.click();
                                     } else {
                                         // Pressed the button not yet long enough
-                                        sel_cnt++;
+                                        selCnt++;
                                     }
                                 } else {
                                     // First time on this button
                                     selected = mb;
-                                    sel_cnt = 1;
+                                    selCnt = 1;
                                 }
                             } else {
                                 if (selected == mb) {
                                     // Does not select this button *anymore*
                                     selected = null;
-                                    sel_cnt = 0;
+                                    selCnt = 0;
                                 } else {
                                     // Does not select this button
                                     mb.setFill(UNPRESSED);
@@ -276,29 +264,6 @@ public class GuiBase extends Application{
             }
         }
     }
-
-    public Rectangle cloneRect(Rectangle rekt) {
-        Rectangle res = new Rectangle(rekt.getX(), rekt.getY(), rekt.getWidth(), rekt.getHeight());
-        res.setFill(rekt.getFill());
-        return res;
-    }
-
-    // Free shared nodes to use in other panes
-//    public void free(Node... nodes) {
-//        System.out.print("NODES: ");
-//        for (Node n : nodes) {
-//            System.out.print(n + ", ");
-//        }
-//        System.out.println();
-//        Pane[] panes = {pane, pane2, pane3a};
-//        for (Pane pane : panes) {
-//            if (pane != null) {
-//                System.out.println("\tPRE \t" + pane.getChildren());
-//                pane.getChildren().removeAll(nodes);
-//                System.out.println("\tPOST\t" + pane.getChildren());
-//            }
-//        }
-//    }
 
     public static String groupToString(Group group) {
         String s = "Group = [";
@@ -333,17 +298,64 @@ public class GuiBase extends Application{
         }
     }
 
-    public double[][] createButtons(int N) {
+    // Expects an array of at least N elements
+    public MenuButton[] createButtons(int N, Runnable... runnables) {
         // Each element is [x, y, width, height]
-        double[][] res = new double[N][4];
+        MenuButton[] mb = new MenuButton[N];
         int margin = 40;
         for (int i = 0; i < N; i++) {
-            res[i][3] = (field_height - (N + 1) * margin) / N;
-            res[i][2] = field_width * 0.75;
-            res[i][0] = field_x + ((field_width - res[i][2]) / 2);
-            res[i][1] = field_y+ (i * res[i][3] + (i + 1) * margin);
+            double h = (fieldHeight - (N + 1) * margin) / N;
+            double w = fieldWidth * 0.75;
+            double x = fieldX + ((fieldWidth - w) / 2);
+            double y = fieldY + (i * h + (i + 1) * margin);
+            mb[i] = new MenuButton(x, y, w, h);
+            mb[i].setClick(runnables[i]);
+            mb[i].setFill(UNPRESSED);
         }
-        return res;
+        return mb;
     }
 
+    public double getFieldHeight() {
+        return fieldHeight;
+    }
+
+    @Override
+    public void paddleLeft(int y) {
+        updatePaddleY(y, paddleLeft);
+    }
+
+    @Override
+    public void goalLeft() {
+
+    }
+
+    @Override
+    public void paddleRight(int y) {
+        updatePaddleY(y, paddleRight);
+    }
+
+    @Override
+    public void goalRight() {
+
+    }
+
+    @Override
+    public void ballX(int x) {
+
+    }
+
+    @Override
+    public void collision() {
+
+    }
+
+    @Override
+    public void ballY(int y) {
+
+    }
+
+    @Override
+    public void calibration(int value) {
+        calibrateFpga(value);
+    }
 }

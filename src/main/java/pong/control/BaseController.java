@@ -1,8 +1,8 @@
 package pong.control;
 
 import javafx.application.Platform;
-import pong.gui.GUI;
 import pong.gui.GuiBase;
+import pong.gui.Paddle;
 
 /**
  * Created by Lindsay on 29-Oct-15.
@@ -26,19 +26,27 @@ public class BaseController extends Thread {
     // Simulates pin handler updates
     public static void test() {
         sleepAndCal(1000, 350);
+        sleepAndCal(1000, 350);
+        sleepAndCal(1000, 1100);
+        sleepAndCal(1000, 1100);
+        sleepAndCal(1000, 1100);
         sleepAndCal(1000, 1100);
         sleepAndCal(1000, 100);
         for (int i = 0; i < 8; i++) {
-            sleepAndY(100, 500);
+            sleepAndY(100, 500, gb.getPaddleLeft());
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 5; i++) {
-            sleepAndY(100, 200);
+            sleepAndY(100, 200, gb.getPaddleLeft());
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 30; i++) {
-            sleepAndY(200, 500);
+            sleepAndY(100, 500, gb.getPaddleLeft());
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 30; i++) {
-            sleepAndY(200, i * 20);
+            sleepAndY(200, i * 20, gb.getPaddleLeft());
+            sleepAndY(200, 1080 - i * 20, gb.getPaddleRight());
         }
     }
 
@@ -56,7 +64,7 @@ public class BaseController extends Thread {
         });
     }
 
-    public static void sleepAndY(long ms, int coor) {
+    public static void sleepAndY(long ms, int coor, Paddle paddle) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -65,7 +73,7 @@ public class BaseController extends Thread {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                gb.updatePaddleY(coor);
+                gb.updatePaddleY(coor, paddle);
             }
         });
     }
