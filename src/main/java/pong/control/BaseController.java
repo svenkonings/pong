@@ -4,9 +4,6 @@ import javafx.application.Platform;
 import pong.gui.GuiBase;
 import pong.gui.Paddle;
 
-/**
- * Created by Lindsay on 29-Oct-15.
- */
 /* The great controller class:
     - Input from [communication]: the GPIO pin handler in C
     - Controls the [GUI]: in Java
@@ -58,12 +55,7 @@ public class BaseController extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                gb.calibrateFpga(coor);
-            }
-        });
+        Platform.runLater(() -> gb.calibrateFpga(coor));
     }
 
     public static void sleepAndY(long ms, int coor, Paddle paddle) {
@@ -72,12 +64,7 @@ public class BaseController extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                gb.updatePaddleY(coor, paddle);
-            }
-        });
+        Platform.runLater(() -> gb.updatePaddleY(coor, paddle));
     }
 
     public static void sleepAndBall(long ms, int x, int y) {
@@ -86,12 +73,9 @@ public class BaseController extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                gb.updateBallX(x);
-                gb.updateBallY(y);
-            }
+        Platform.runLater(() -> {
+            gb.updateBallX(x);
+            gb.updateBallY(y);
         });
     }
 
@@ -101,16 +85,6 @@ public class BaseController extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                gb.updateGoal(left);
-            }
-        });
-    }
-
-    public static void main(String[] args) {
-        (new BaseController(gb)).start();
-        gb.main(args);
+        Platform.runLater(() -> gb.updateGoal(left));
     }
 }

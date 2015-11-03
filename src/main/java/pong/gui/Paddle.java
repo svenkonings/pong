@@ -1,6 +1,5 @@
 package pong.gui;
 
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
 public class Paddle extends Rectangle {

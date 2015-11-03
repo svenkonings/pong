@@ -22,9 +22,6 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Created by Lindsay on 02-Nov-15.
- */
 public class GuiBase extends Application implements Gpio.Listener {
     /* General */
     private Gpio gpio;
@@ -93,14 +90,13 @@ public class GuiBase extends Application implements Gpio.Listener {
     private Group group4;
     private int goalLeft = 0, goalRight = 0;
 
-    @Override
-    public void start(Stage primaryStage) {
+    public void init() {
         GPIO = true;
         if (GPIO) {
             gpio = new Gpio(this);
             gpio.start();
         }
-//        playSound("Level_Up.wav");
+//      playSound("Level_Up.wav");
         calibrateGui();
         setUpPane();
         setUpMenu1();
@@ -108,6 +104,10 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu3a();
         setUpMenu3b();
         setUpMenu4();
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
         setUpStage(primaryStage);
         if (GPIO) {
             gpio.send(Gpio.CALIBRATION);
@@ -143,7 +143,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         pane = new Pane();
         pane.setStyle("-fx-background-color: " + BG + ";-fx-padding: 10px;");
         menu = new Scene(pane, screenWidth, screenHeight);
-        // Laffe init to avoid null pointers
+        // Initialize paddles
         paddleLeft = new Paddle();
         paddleRight = new Paddle();
         ball = new Circle();
