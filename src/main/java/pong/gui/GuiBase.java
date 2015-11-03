@@ -95,9 +95,10 @@ public class GuiBase extends Application implements Gpio.Listener {
     private int goalLeft = 0, goalRight = 0;
 
     /* MENU5:
-    Btn: Resume */
-    private MenuButton buttonRs;
-    private Text text5;
+    Btn: Resume
+    Btn: Quit*/
+    private MenuButton buttonRs, buttonQt;
+    private Text textRs, textQt, text5;
     private ButtonGroup group5;
 
     @Override
@@ -288,16 +289,21 @@ public class GuiBase extends Application implements Gpio.Listener {
     }
 
     public void setUpMenu5() {
-        MenuButton[] mb = createButtons(1, () -> {switchGroup(group4); send(currentMode);});
+        MenuButton[] mb = createButtons(2,
+                () -> {switchGroup(group4); send(currentMode);},
+                () -> {switchGroup(group1); send(Gpio.IDLE); send(Gpio.CALIBRATION);}
+        );
         buttonRs = mb[0];
-        buttonRs.addText("Resume");
+        textRs = buttonRs.addText("Resume");
+        buttonQt = mb[1];
+        textQt = buttonQt.addText("Quit");
         text5 = new Text("Pause");
         text5.setFont(new Font("Verdana", 25));
         text5.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
         text5.setY(text3b.getBoundsInParent().getHeight());
         group5 = new ButtonGroup();
-        group5.addButtons(buttonRs);
-        group5.getChildren().add(text5);
+        group5.addButtons(buttonRs, buttonQt);
+        group5.getChildren().addAll(textRs, textQt, text5);
     }
 
     public void send(int mode) {

@@ -10,7 +10,7 @@ import pong.gui.Paddle;
     - Output to [communication]: the GPIO pin handler in C
  */
 public class BaseController extends Thread {
-    private static GuiBase gb;
+    private GuiBase gb;
 
     public BaseController(GuiBase gui_base) {
         gb = gui_base;
@@ -21,7 +21,7 @@ public class BaseController extends Thread {
     }
 
     // Simulates pin handler updates
-    public static void test() {
+    public void test() {
         sleepAndCal(100, 350);
 //        sleepAndCal(1000, 350);
         sleepAndCal(100, 1100);
@@ -42,14 +42,17 @@ public class BaseController extends Thread {
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 300; i++) {
-            sleepAndY(20, i * 2, true);
-            sleepAndY(20, 1080 - i * 2, false);
-            sleepAndBall(20, i * 2, i * 2);
-            sleepAndScore(20, true);
+            sleepAndY(10, i * 2, true);
+            sleepAndY(10, 1080 - i * 2, false);
+            sleepAndBall(10, i * 2, i * 2);
+            sleepAndScore(10, true);
+        }
+        for (int i = 0; i < 30; i++) {
+            sleepAndPause(100, i* 20);
         }
     }
 
-    public static void sleepAndCal(long ms, int coor) {
+    public void sleepAndCal(long ms, int coor) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -58,7 +61,7 @@ public class BaseController extends Thread {
         Platform.runLater(() -> gb.calibrateFpga(coor));
     }
 
-    public static void sleepAndY(long ms, int coor,boolean left) {
+    public void sleepAndY(long ms, int coor,boolean left) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -71,7 +74,7 @@ public class BaseController extends Thread {
         }
     }
 
-    public static void sleepAndBall(long ms, int x, int y) {
+    public void sleepAndBall(long ms, int x, int y) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -83,12 +86,21 @@ public class BaseController extends Thread {
         });
     }
 
-    public static void sleepAndScore(long ms, boolean left) {
+    public void sleepAndScore(long ms, boolean left) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         Platform.runLater(() -> gb.updateGoal(left));
+    }
+
+    public void sleepAndPause(long ms, int y) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Platform.runLater(() -> gb.pause(y));
     }
 }
