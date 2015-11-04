@@ -8,6 +8,8 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -21,6 +23,11 @@ import pong.Fpga;
 import pong.control.BaseController;
 import pong.gpio.Gpio;
 
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Iterator;
 
 public class GuiBase extends Application implements Gpio.Listener {
@@ -63,6 +70,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     Arrows (leftupper, middle, lower): images */
     private Text text1;
     private Group group1;
+    private ImageView imageView, imageViewLogo;
 
     /* MENU2
     Btn: Single player
@@ -171,23 +179,24 @@ public class GuiBase extends Application implements Gpio.Listener {
     // Updates calibration values and dependancies
     public void calibrateFpga(int coor) {
         if (coor != prevCal) {
-//            System.out.println("HURRAY!");
             cal[calCnt] = coor;
-            text1.setText(text1.getText() + "\nValue[" + calCnt + "] = " + coor);
+            text1.setText(text1.getText() + "\n\nCalibration value #" + (calCnt + 1) + " is measured as " + coor);
             calCnt++;
             if (calCnt == 3) {
                 calCnt = 0;
                 prevCal = 0;
-                resetMenu1();
                 Fpga.calibrate(cal[0], cal[1], cal[2]);
                 paddleLength = fieldHeight * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
                 paddleWidth = paddleLength * PADDLE_LENGTH_TO_WIDTH;
-//                System.out.println("GUI: " + paddleLength + ", " + paddleWidth);
                 setUpPaddle(paddleLeft);
                 setUpPaddle(paddleRight);
                 setUpBall();
                 switchGroup(group2);
                 send(Gpio.MENU);
+            } else if (calCnt == 1) {
+                imageView.setY(imageView.getY() - imageView.getFitHeight());
+            } else {
+                imageView.setY(fieldY);
             }
         }
         prevCal = coor;
@@ -222,17 +231,34 @@ public class GuiBase extends Application implements Gpio.Listener {
     }
 
     public void setUpMenu1() {
-        text1 = new Text("Calibration time! Waiting for calibration values of left paddle...");
-        text1.setFont(new Font("Verdana", 25));
-        text1.setX((screenWidth - text1.getBoundsInParent().getWidth()) / 2);
-        text1.setY(text1.getBoundsInParent().getHeight());
+        imageView = new ImageView();
+        imageViewLogo = new ImageView();
+        double margin = 80;
+        try {
+            Image arrow = new Image(new FileInputStream(new File("arrow.png")));
+            Image logo = new Image(new FileInputStream(new File("logo.png")));
+            imageView.setImage(arrow);
+            imageView.setFitHeight(fieldHeight / 4);
+            imageView.setFitWidth(imageView.getFitHeight() * (arrow.getWidth() / arrow.getHeight()));
+            imageView.setX(fieldX);
+            imageView.setY(fieldY + fieldHeight - imageView.getFitHeight());
+            margin = imageView.getFitWidth() + 80;
+            imageViewLogo.setImage(logo);
+            imageViewLogo.setFitWidth(fieldWidth / 3);
+            imageViewLogo.setFitHeight(imageViewLogo.getFitWidth() * (logo.getHeight() / logo.getWidth()));
+            imageViewLogo.setY(fieldY);
+            imageViewLogo.setX(fieldX + fieldWidth - imageViewLogo.getFitWidth());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        text1 = new Text("Choose an object with a flat surface. A whiteboard eraser is ideal.\nHold the object in front of the sensor as indicated by the arrows and click on the third button (\"KEY1\") on the DE1 SoC to confirm.");
+        text1.setWrappingWidth(fieldWidth - margin);
+        text1.setFont(new Font("Verdana", 40));
+        text1.setX(fieldX + margin - 40 + (fieldWidth - margin - text1.getBoundsInParent().getWidth()) / 2);
+        text1.setY((screenHeight - text1.getBoundsInParent().getHeight()) / 2);
         group1 = new Group();
-        group1.getChildren().add(text1);
+        group1.getChildren().addAll(text1, imageView, imageViewLogo);
         pane.getChildren().addAll(field, group1);
-    }
-
-    public void resetMenu1() {
-        text1.setText("Calibration time! Waiting for calibration values of left paddle...");
     }
 
     public void setUpMenu2() {
