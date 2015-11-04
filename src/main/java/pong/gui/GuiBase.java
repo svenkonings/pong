@@ -43,6 +43,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     private double paddleLength, paddleWidth;
     private static final double PADDLE_LENGTH_TO_WIDTH = 0.25;
     private Paddle paddleLeft, paddleRight;
+    private double paddleRightY;
     // Calibration
     private int[] cal = new int[3];
     private int calCnt = 0;
@@ -91,6 +92,8 @@ public class GuiBase extends Application implements Gpio.Listener {
     Debug values in bottom */
     private Text textScore, textLeft, textRight;
     private Circle ball;
+    private double ballX;
+    private double ballY;
     private static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.125; // which is 1/2 of to ball diameter
     private double ballWidth;
     private Group group4;
@@ -149,7 +152,11 @@ public class GuiBase extends Application implements Gpio.Listener {
         // Initialize paddles
         paddleLeft = new Paddle();
         paddleRight = new Paddle();
+        // paddleRight and the ball are buffered and updated on paddleLeft
+        paddleRightY = -1;
         ball = new Circle();
+        ballX = -1;
+        ballY = -1;
     }
 
     // Updates calibration values and dependancies
@@ -174,14 +181,6 @@ public class GuiBase extends Application implements Gpio.Listener {
             }
         }
         prevCal = coor;
-    }
-
-    public Paddle getPaddleLeft() {
-        return paddleLeft;
-    }
-
-    public Paddle getPaddleRight() {
-        return paddleRight;
     }
 
     public void setUpPaddle(Paddle paddle) {
@@ -350,19 +349,31 @@ public class GuiBase extends Application implements Gpio.Listener {
         }
     }
 
-    public void updatePaddleY(int fpgaY, Paddle paddle) {
+    public void updatePaddleLeft(int fpgaY) {
         double y = Fpga.convertPaddleY(fpgaY, fieldHeight);
         y += fieldY;
-        paddle.setY(y);
-        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
-        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
+        paddleLeft.setY(y);
+//        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
+//        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
+        if (paddleRightY != -1) {
+            paddleRight.setY(paddleRightY);
+            paddleRightY = -1;
+        }
+        if (ballX != -1) {
+            ball.setCenterX(ballX);
+            ballX = -1;
+        }
+        if (ballY != -1) {
+            ball.setCenterY(ballY);
+            ballY = -1;
+        }
         // Only the left paddle will control the menu!
-        if (currentMenu != null && paddle == paddleLeft) {
+        if (currentMenu != null) {
             MenuButton newSelected = selected;
             // Loop through all the buttons of this pane
             for (MenuButton mb : currentMenu.getButtons()) {
                 // Test if the middle of the paddle is somewhere between the top and the bottom of the menuButton
-                if (mb.containsY(y + paddle.getHeight() / 2)) {
+                if (mb.containsY(y + paddleLeft.getHeight() / 2)) {
                     if (selected == mb) {
                         if (selCnt < SEL_THR) {
                             // Pressed the button not yet long enough
@@ -400,16 +411,22 @@ public class GuiBase extends Application implements Gpio.Listener {
         }
     }
 
+    public void updatePaddleRight(int fpgaY) {
+        double y = Fpga.convertPaddleY(fpgaY, fieldHeight);
+        y += fieldY;
+        paddleRightY = y;
+    }
+
     public void updateBallY(int fpgaY) {
         double y = Fpga.convertBallY(fpgaY, fieldHeight);
         y += fieldY;
-        ball.setCenterY(y);
+        ballY = y;
     }
 
     public void updateBallX(int fpgaX) {
         double x = Fpga.convertBallX(fpgaX, fieldWidth);
         x += fieldX;
-        ball.setCenterX(x);
+        ballX = x;
     }
 
     public static String groupToString(Group group) {
@@ -507,7 +524,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void paddleLeft(int y) {
-        Platform.runLater(() -> updatePaddleY(y, paddleLeft));
+        Platform.runLater(() -> updatePaddleLeft(y));
     }
 
     @Override
@@ -517,7 +534,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void paddleRight(int y) {
-        Platform.runLater(() -> updatePaddleY(y, paddleRight));
+        Platform.runLater(() -> updatePaddleRight(y));
     }
 
     @Override
