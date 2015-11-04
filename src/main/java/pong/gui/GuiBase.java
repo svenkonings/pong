@@ -23,11 +23,9 @@ import pong.Fpga;
 import pong.control.BaseController;
 import pong.gpio.Gpio;
 
-import javax.sound.sampled.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Iterator;
 
 public class GuiBase extends Application implements Gpio.Listener {
@@ -75,8 +73,8 @@ public class GuiBase extends Application implements Gpio.Listener {
     /* MENU2
     Btn: Single player
     Btn: Two player */
-    private MenuButton buttonSp, buttonMp;
-    private Text textSp,textMp;
+    private MenuButton buttonSp, buttonMp, buttonExit;
+    private Text textSp,textMp, textExit;
     private ButtonGroup group2;
     private ProgressBar loadingBar2;
 
@@ -230,6 +228,11 @@ public class GuiBase extends Application implements Gpio.Listener {
         stage.show();
     }
 
+    public void endGame() {
+        send(Gpio.IDLE);
+        Platform.exit();
+    }
+
     public void setUpMenu1() {
         imageView = new ImageView();
         imageViewLogo = new ImageView();
@@ -268,16 +271,19 @@ public class GuiBase extends Application implements Gpio.Listener {
                     textRight.setText("Player 2");
                     textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
                     textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
-                    send(Gpio.START_GAME);}
+                    send(Gpio.START_GAME);},
+                () -> endGame()
         );
         buttonSp = mb[0];
         textSp = buttonSp.addText("Singleplayer");
         buttonMp = mb[1];
         textMp = buttonMp.addText("Multiplayer");
+        buttonExit = mb[2];
+        textExit = buttonExit.addText("Exit");
         group2 = new ButtonGroup();
         loadingBar2 = group2.addBar(this);
-        group2.addButtons(buttonSp, buttonMp);
-        group2.getChildren().addAll(textSp, textMp, loadingBar2);
+        group2.addButtons(buttonSp, buttonMp, buttonExit);
+        group2.getChildren().addAll(textSp, textMp, textExit, loadingBar2);
         pane.getChildren().addAll(paddleLeft, paddleRight);
     }
 
@@ -513,7 +519,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         int N = runnables.length;
         // Each element is [x, y, width, height]
         MenuButton[] mb = new MenuButton[N];
-        int margin = 40;
+        int margin = 60;
         for (int i = 0; i < N; i++) {
             double h = (fieldHeight - (N + 1) * margin) / N;
             double w = fieldWidth * FIELD_TO_BUTTON_WIDTH;
