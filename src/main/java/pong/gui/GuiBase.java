@@ -3,9 +3,11 @@ package pong.gui;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -24,22 +26,24 @@ import java.util.Iterator;
 public class GuiBase extends Application implements Gpio.Listener {
     /* General */
     private Gpio gpio;
-    private static final boolean GPIO = true;
+    public static final boolean GPIO = false;
     private Stage stage;
     private Scene menu;
     private Pane pane;
-    private ButtonGroup currentMenu;
     private double screenWidth, screenHeight;
+    private ButtonGroup currentMenu;
+    private ProgressBar currentLoadingBar;
     private int currentMode;
     // Field
-    private double fieldHeight, fieldWidth;
-    private static final double SCREEN_TO_FIELD_WIDTH = 9.0 / 10.0;
+    public static final double SCREEN_TO_FIELD_WIDTH = 0.9;
+    public static final double FIELD_TO_BUTTON_WIDTH = 0.75;
     private double fieldX, fieldY;
+    private double fieldHeight, fieldWidth;
     private Rectangle field;
     // Paddle
-    private double paddleLength, paddleWidth;
-    private static final double PADDLE_LENGTH_TO_WIDTH = 0.25;
+    public static final double PADDLE_LENGTH_TO_WIDTH = 0.25;
     private Paddle paddleLeft, paddleRight;
+    private double paddleLength, paddleWidth;
     private double paddleRightY;
     // Calibration
     private int[] cal = new int[3];
@@ -48,11 +52,11 @@ public class GuiBase extends Application implements Gpio.Listener {
     // Selected button
     private MenuButton selected;
     private int selCnt = 0;
-    private static final int SEL_THR = GPIO ? 320 : 10;
+    public static final int SEL_THR = GPIO ? 320 : 10;
     // Colors
-    private static final Color PRESSED = Color.MEDIUMSEAGREEN, UNPRESSED = Color.SEAGREEN;
-    private static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
-    private static final String BG = "white";
+    public static final Color PRESSED = Color.MEDIUMSEAGREEN, UNPRESSED = Color.SEAGREEN;
+    public static final Color FIELD_COLOR = Color.LIGHTGREEN, PADDLE_COLOR = Color.MEDIUMSEAGREEN;
+    public static final String BG = "white";
 
     /* MENU1
     "Calibration: hold the object in front of the sensor and click on button 1 on FPGA to confirm"
@@ -64,35 +68,38 @@ public class GuiBase extends Application implements Gpio.Listener {
     Btn: Single player
     Btn: Two player */
     private MenuButton buttonSp, buttonMp;
-    private Text textSp,textMp, text2;
+    private Text textSp,textMp;
     private ButtonGroup group2;
+    private ProgressBar loadingBar2;
 
     /* MENU3A: 1P
     Btn: Easy
     Btn: Medium
     Btn: Hard */
-    private MenuButton buttonEz, buttonMd, buttonHd;
-    private Text text3a;
+    private MenuButton buttonEz, buttonMd, buttonHd, buttonBack;
+    private Text textEz, textMd, textHd, textBack;
     private ButtonGroup group3a;
+    private ProgressBar loadingBar3a;
 
     /* MENU3B
     "Calibration: hold the object in front of the sensor and click on button 1 on FPGA to confirm"
     Arrows (rightupper, middle, lower): images */
-    private Text text3b;
-    private Group group3b;
+//    private Text text3b;
+//    private Group group3b;
 
     /* MENU4
     Scores: player1 - player2
     Ball
     Debug values in bottom */
-    private Text text4;
+    public static final int GOAL_THRES = 10;
+    public static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.125; // which is 1/2 of to ball diameter
+    private Text textScore, textLeft, textRight;
     private Circle ball;
     private double ballX;
     private double ballY;
-    private static final double PADDLE_LENGTH_TO_BALL_RADIUS = 0.125; // which is 1/2 of to ball diameter
     private double ballWidth;
-    private Group group4;
     private int goalLeft = 0, goalRight = 0;
+    private Group group4;
 
     /* MENU5:
     Btn: Resume
@@ -100,6 +107,7 @@ public class GuiBase extends Application implements Gpio.Listener {
     private MenuButton buttonRs, buttonQt;
     private Text textRs, textQt, text5;
     private ButtonGroup group5;
+    private ProgressBar loadingBar5;
 
     @Override
     public void start(Stage primaryStage) {
@@ -113,7 +121,7 @@ public class GuiBase extends Application implements Gpio.Listener {
         setUpMenu1();
         setUpMenu2();
         setUpMenu3a();
-        setUpMenu3b();
+//        setUpMenu3b();
         setUpMenu4();
         setUpMenu5();
         setUpStage(primaryStage);
@@ -169,6 +177,8 @@ public class GuiBase extends Application implements Gpio.Listener {
             calCnt++;
             if (calCnt == 3) {
                 calCnt = 0;
+                prevCal = 0;
+                resetMenu1();
                 Fpga.calibrate(cal[0], cal[1], cal[2]);
                 paddleLength = fieldHeight * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
                 paddleWidth = paddleLength * PADDLE_LENGTH_TO_WIDTH;
@@ -221,78 +231,113 @@ public class GuiBase extends Application implements Gpio.Listener {
         pane.getChildren().addAll(field, group1);
     }
 
+    public void resetMenu1() {
+        text1.setText("Calibration time! Waiting for calibration values of left paddle...");
+    }
+
     public void setUpMenu2() {
         // Buttons
-        MenuButton[] mb = createButtons(2,
-                () -> switchGroup(group3a),
-                () -> {switchGroup(group4); send(Gpio.START_GAME);}
+        MenuButton[] mb = createButtons(() -> switchGroup(group3a),
+                () -> {switchGroup(group4);
+                    textRight.setText("Player 2");
+                    textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
+                    textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
+                    send(Gpio.START_GAME);}
         );
         buttonSp = mb[0];
         textSp = buttonSp.addText("Singleplayer");
         buttonMp = mb[1];
         textMp = buttonMp.addText("Multiplayer");
-        // Coordinate text
-        String s = "FPGA: min_y=" + Fpga.MIN_Y + ", paddle_y=" + Fpga.PADDLE_Y + ", max_y=" + Fpga.MAX_Y + "\npaddle_length=" + Fpga.PADDLE_LENGTH + ", height=" + Fpga.HEIGHT + ", width=" + Fpga.WIDTH;
-        text2 = new Text(s);
-        text2.setFont(new Font("Verdana", 25));
-        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
-        text2.setY(text2.getBoundsInParent().getHeight());
         group2 = new ButtonGroup();
+        loadingBar2 = group2.addBar(this);
         group2.addButtons(buttonSp, buttonMp);
-        group2.getChildren().addAll(textSp, textMp, text2);
+        group2.getChildren().addAll(textSp, textMp, loadingBar2);
         pane.getChildren().addAll(paddleLeft, paddleRight);
     }
 
     public void setUpMenu3a() {
         // Buttons
-        MenuButton[] mb = createButtons(3,
-                () -> {switchGroup(group4); send(Gpio.AI_1);},
-                () -> {switchGroup(group4); send(Gpio.AI_2);},
-                () -> {switchGroup(group4); send(Gpio.AI_3);}
+        MenuButton[] mb = createButtons(
+                () -> {switchGroup(group4);
+                    textRight.setText("Invincible bot");
+                    textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
+                    textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
+                    send(Gpio.AI_1);},
+                () -> {switchGroup(group4);
+                    textRight.setText("Medium bot");
+                    textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
+                    textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
+                    send(Gpio.AI_2);},
+                () -> {switchGroup(group4);
+                    textRight.setText("Drunk bot");
+                    textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
+                    textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
+                    send(Gpio.AI_3);},
+                () -> switchGroup(group2)
         );
-        buttonEz = mb[0];
+        buttonHd = mb[0];
+        textHd = buttonHd.addText("Invincible");
         buttonMd = mb[1];
-        buttonHd = mb[2];
-        // Coordinate text
-        text3a = new Text("Nothing happened yet.");
-        text3a.setFont(new Font("Verdana", 25));
-        text3a.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
-        text3a.setY(text3a.getBoundsInParent().getHeight());
+        textMd = buttonMd.addText("Medium");
+        buttonEz = mb[2];
+        textEz = buttonEz.addText("Drunk");
+        buttonBack = mb[3];
+        textBack = buttonBack.addText("Back");
         // Group
         group3a = new ButtonGroup();
-        group3a.addButtons(buttonEz, buttonMd, buttonHd);
-        group3a.getChildren().add(text3a);
+        loadingBar3a = group3a.addBar(this);
+        group3a.addButtons(buttonEz, buttonMd, buttonHd, buttonBack);
+        group3a.getChildren().addAll(textEz, textMd, textHd, textBack, loadingBar3a);
     }
 
-    public void setUpMenu3b() {
-        text3b = new Text("Calibration time! Waiting for calibration values of right paddle...\nOh wait we don't do that anymore ;(");
-        text3b.setFont(new Font("Verdana", 25));
-        text3b.setX((screenWidth - text3b.getBoundsInParent().getWidth()) / 2);
-        text3b.setY(text3b.getBoundsInParent().getHeight());
-        group3b = new Group();
-        group3b.getChildren().add(text3b);
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        switchGroup(group4);
-    }
+//    public void setUpMenu3b() {
+//        text3b = new Text("Calibration time! Waiting for calibration values of right paddle...\nOh wait we don't do that anymore ;(");
+//        text3b.setFont(new Font("Verdana", 25));
+//        text3b.setX((screenWidth - text3b.getBoundsInParent().getWidth()) / 2);
+//        text3b.setY(text3b.getBoundsInParent().getHeight());
+//        group3b = new Group();
+//        group3b.getChildren().add(text3b);
+////        try {
+////            Thread.sleep(5000);
+////        } catch (InterruptedException e) {
+////            e.printStackTrace();
+////        }
+////        switchGroup(group4);
+//    }
 
     public void setUpMenu4() {
-        text4 = new Text(goalLeft + " - " + goalRight);
-        text4.setFont(new Font("Verdana", 25));
-        text4.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
-        text4.setY(text3b.getBoundsInParent().getHeight());
+        textScore = new Text(goalLeft + " - " + goalRight);
+        textScore.setFont(new Font("Verdana", 50));
+        textScore.setTextOrigin(VPos.TOP);
+        textScore.setX((screenWidth - textScore.getBoundsInParent().getWidth()) / 2);
+        textScore.setY((fieldY - textScore.getBoundsInParent().getHeight()) / 2);
+        textLeft = new Text("Player 1");
+        textLeft.setFont(new Font("Verdana", 30));
+        textLeft.setTextOrigin(VPos.TOP);
+        textLeft.setX(fieldX);
+        textLeft.setY((fieldY - textLeft.getBoundsInParent().getHeight()) / 2);
+        textRight = new Text("Player 2");
+        textRight.setFont(new Font("Verdana", 30));
+        textRight.setTextOrigin(VPos.TOP);
+        textRight.setX(fieldX + fieldWidth - textRight.getBoundsInParent().getWidth());
+        textRight.setY((fieldY - textRight.getBoundsInParent().getHeight()) / 2);
 //        System.out.println(ball);
         group4 = new Group();
-        group4.getChildren().addAll(ball, text4);
+        group4.getChildren().addAll(ball, textScore, textLeft, textRight);
+    }
+
+    public void resetMenu4() {
+        goalLeft = 0;
+        goalRight = 0;
+        textScore.setText(goalLeft + " - " + goalRight);
+        textLeft.setText("Player 1");
+        textRight.setText("Player 2");
     }
 
     public void setUpMenu5() {
-        MenuButton[] mb = createButtons(2,
+        MenuButton[] mb = createButtons(
                 () -> {switchGroup(group4); send(currentMode);},
-                () -> {switchGroup(group1); send(Gpio.IDLE); send(Gpio.CALIBRATION);}
+                () -> {resetMenu4(); send(Gpio.MENU); switchGroup(group2);}
         );
         buttonRs = mb[0];
         textRs = buttonRs.addText("Resume");
@@ -300,11 +345,12 @@ public class GuiBase extends Application implements Gpio.Listener {
         textQt = buttonQt.addText("Quit");
         text5 = new Text("Pause");
         text5.setFont(new Font("Verdana", 25));
-        text5.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
-        text5.setY(text3b.getBoundsInParent().getHeight());
+        text5.setX((screenWidth - text5.getBoundsInParent().getWidth()) / 2);
+        text5.setY(text5.getBoundsInParent().getHeight());
         group5 = new ButtonGroup();
+        loadingBar5 = group5.addBar(this);
         group5.addButtons(buttonRs, buttonQt);
-        group5.getChildren().addAll(textRs, textQt, text5);
+        group5.getChildren().addAll(textRs, textQt, text5, loadingBar5);
     }
 
     public void send(int mode) {
@@ -320,17 +366,20 @@ public class GuiBase extends Application implements Gpio.Listener {
         } else {
             goalRight++;
         }
-        text4.setText(goalLeft + " - " + goalRight);
-        text4.setX((screenWidth - text4.getBoundsInParent().getWidth()) / 2);
-        playSound("whoosh.wav");
+        textScore.setText(goalLeft + " - " + goalRight);
+        textScore.setX((screenWidth - textScore.getBoundsInParent().getWidth()) / 2);
+//        playSound("whoosh.wav");
+        if (goalLeft == GOAL_THRES || goalRight == GOAL_THRES) {
+            resetMenu4();
+            send(Gpio.MENU);
+            switchGroup(group2);
+        }
     }
 
     public void updatePaddleLeft(int fpgaY) {
         double y = Fpga.convertPaddleY(fpgaY, fieldHeight);
         y += fieldY;
         paddleLeft.setY(y);
-//        text2.setText("SEL = " + selected + ", cnt = " + selCnt);
-//        text2.setX((screenWidth - text2.getBoundsInParent().getWidth()) / 2);
         if (paddleRightY != -1) {
             paddleRight.setY(paddleRightY);
             paddleRightY = -1;
@@ -345,40 +394,44 @@ public class GuiBase extends Application implements Gpio.Listener {
         }
         // Only the left paddle will control the menu!
         if (currentMenu != null) {
+            MenuButton newSelected = null;
             // Loop through all the buttons of this pane
             for (MenuButton mb : currentMenu.getButtons()) {
                 // Test if the middle of the paddle is somewhere between the top and the bottom of the menuButton
                 if (mb.containsY(y + paddleLeft.getHeight() / 2)) {
+                    newSelected = mb;
                     if (selected == mb) {
                         if (selCnt < SEL_THR) {
                             // Pressed the button not yet long enough
                             selCnt++;
+//                            System.out.println("YUP: selCnt=" + selCnt + ", selThr=" + SEL_THR + ", %=" + ((double) selCnt / (double) SEL_THR));
+                            currentLoadingBar.setProgress((double) selCnt / (double) SEL_THR);
                         } else {
-                            // Pressed the button long enough
-                            selected = null;
+                            // Pressed the button long enough, resetting values to set-up Back
+                            newSelected = null;
                             selCnt = 0;
-                            mb.setFill(PRESSED);
+                            currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
+                            mb.setStroke(UNPRESSED);
+                            mb.setStrokeWidth(0);
                             mb.click();
                         }
                     } else {
                         // First time on this button
-                        selected = mb;
                         selCnt = 1;
+                        currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
                         // MenuButton selected
-                        mb.setStrokeWidth(mb.getHeight() / 20);
                         mb.setStroke(PRESSED);
-                        mb.setStrokeType(StrokeType.INSIDE);
+                        mb.setStrokeWidth(mb.getHeight() / 20);
                     }
                 } else if (selected == mb) {
                     // Does not select this button *anymore*
-                    selected = null;
                     selCnt = 0;
-                    // Does not select this button
-                    mb.setFill(UNPRESSED);
+                    currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
                     mb.setStroke(UNPRESSED);
                     mb.setStrokeWidth(0);
                 }
             }
+            selected = newSelected;
         }
     }
 
@@ -416,9 +469,12 @@ public class GuiBase extends Application implements Gpio.Listener {
                 iterator.remove();
             }
         }
+        currentLoadingBar = null;
         if (group != null) {
             if (group instanceof ButtonGroup) {
-                currentMenu = (ButtonGroup) group;
+                ButtonGroup menu = (ButtonGroup) group;
+                currentMenu = menu;
+                currentLoadingBar = menu.getBar();
             } else {
                 currentMenu = null;
             }
@@ -427,23 +483,26 @@ public class GuiBase extends Application implements Gpio.Listener {
     }
 
     // Expects an array of at least N elements
-    public MenuButton[] createButtons(int N, Runnable... runnables) {
+    public MenuButton[] createButtons(Runnable... runnables) {
+        int N = runnables.length;
         // Each element is [x, y, width, height]
         MenuButton[] mb = new MenuButton[N];
         int margin = 40;
         for (int i = 0; i < N; i++) {
             double h = (fieldHeight - (N + 1) * margin) / N;
-            double w = fieldWidth * 0.75;
+            double w = fieldWidth * FIELD_TO_BUTTON_WIDTH;
             double x = fieldX + ((fieldWidth - w) / 2);
             double y = fieldY + (i * h + (i + 1) * margin);
             mb[i] = new MenuButton(x, y, w, h);
             mb[i].setClick(runnables[i]);
             mb[i].setFill(UNPRESSED);
+            mb[i].setStrokeType(StrokeType.INSIDE);
+            mb[i].setFill(UNPRESSED);
         }
         return mb;
     }
 
-    public void playSound(String fileName) {
+//    public void playSound(String fileName) {
 //        new Thread() {
 //            @Override
 //            public void run() {
@@ -458,18 +517,22 @@ public class GuiBase extends Application implements Gpio.Listener {
 //            }
 //        }.start();
 //        (new Thread(new MediaPlayer(fileName))).start();
-    }
+//    }
 
     public double getFieldHeight() {
         return fieldHeight;
     }
 
-    public static double getPaddleLengthToBallRadius() {
-        return PADDLE_LENGTH_TO_BALL_RADIUS;
+    public double getFieldWidth() {
+        return fieldWidth;
     }
 
-    public static Color getPRESSED() {
-        return PRESSED;
+    public double getFieldX() {
+        return fieldX;
+    }
+
+    public double getFieldY() {
+        return fieldY;
     }
 
     @Override
@@ -499,7 +562,7 @@ public class GuiBase extends Application implements Gpio.Listener {
 
     @Override
     public void collision() {
-        playSound("ping.wav");
+//        playSound("ping.wav");
     }
 
     @Override

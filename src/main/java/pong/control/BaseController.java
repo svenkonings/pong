@@ -22,23 +22,27 @@ public class BaseController extends Thread {
 
     // Simulates pin handler updates
     public void test() {
-        sleepAndCal(100, 350);
+        sleepAndCal(1000, 350);
 //        sleepAndCal(1000, 350);
-        sleepAndCal(100, 1100);
+        sleepAndCal(1000, 1100);
 //        sleepAndCal(1000, 1100);
 //        sleepAndCal(1000, 1100);
-        sleepAndCal(100, 100);
+        sleepAndCal(1000, 100);
 //        sleepAndCal(1000, 100);
         for (int i = 0; i < 8; i++) {
             sleepAndY(100, 500, true);
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 5; i++) {
+            sleepAndY(100, 500, true);
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
+        }
+        for (int i = 0; i < 15; i++) {
             sleepAndY(100, 200, true);
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 30; i++) {
-            sleepAndY(100, 200, true);
+            sleepAndY(100, 500, true);
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), false);
         }
         for (int i = 0; i < 300; i++) {

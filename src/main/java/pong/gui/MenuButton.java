@@ -57,7 +57,7 @@ public class MenuButton extends Rectangle {
         text = new Text(s);
         text.setFont(new Font("Verdana", 100));
         text.setTextOrigin(VPos.TOP);
-        text.setFill(GuiBase.getPRESSED());
+        text.setFill(GuiBase.PRESSED);
         locateText();
         return text;
     }

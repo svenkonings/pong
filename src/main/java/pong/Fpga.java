@@ -98,13 +98,13 @@ public class Fpga {
         double y = field_height - ((fpgaY - MIN_Y) / HEIGHT) * field_height;
 //        System.out.println("gui y = " + y);
         // GUI paddle height
-        double paddle_height = field_height * PADDLE_LENGTH * GuiBase.getPaddleLengthToBallRadius() / HEIGHT;
+        double paddle_height = field_height * PADDLE_LENGTH * GuiBase.PADDLE_LENGTH_TO_BALL_RADIUS / HEIGHT;
 //        System.out.println("gui paddle height = " + paddle_height);
         return y - paddle_height;
     }
 
     public static double convertBallX(int fpgaX, double field_width) {
-        return field_width * fpgaX / WIDTH + 2 * PADDLE_LENGTH * GuiBase.getPaddleLengthToBallRadius();
+        return field_width * fpgaX / WIDTH + 2 * PADDLE_LENGTH * GuiBase.PADDLE_LENGTH_TO_BALL_RADIUS;
     }
 
     public static void main(String[] args) {
