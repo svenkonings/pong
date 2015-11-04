@@ -410,7 +410,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                             // Pressed the button long enough, resetting values to set-up Back
                             newSelected = null;
                             selCnt = 0;
-                            currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
+                            currentLoadingBar.setProgress((double) selCnt / (double) SEL_THR);
                             mb.setStroke(UNPRESSED);
                             mb.setStrokeWidth(0);
                             mb.click();
@@ -418,7 +418,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                     } else {
                         // First time on this button
                         selCnt = 1;
-                        currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
+                        currentLoadingBar.setProgress((double) selCnt / (double) SEL_THR);
                         // MenuButton selected
                         mb.setStroke(PRESSED);
                         mb.setStrokeWidth(mb.getHeight() / 20);
@@ -426,7 +426,7 @@ public class GuiBase extends Application implements Gpio.Listener {
                 } else if (selected == mb) {
                     // Does not select this button *anymore*
                     selCnt = 0;
-                    currentLoadingBar.setProgress(0.25);//selCnt / SEL_THR);
+                    currentLoadingBar.setProgress((double) selCnt / (double) SEL_THR);
                     mb.setStroke(UNPRESSED);
                     mb.setStrokeWidth(0);
                 }
