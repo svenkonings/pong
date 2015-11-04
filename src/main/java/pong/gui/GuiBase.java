@@ -168,6 +168,7 @@ public class GuiBase extends Application implements Gpio.Listener {
             text1.setText(text1.getText() + "\nValue[" + calCnt + "] = " + coor);
             calCnt++;
             if (calCnt == 3) {
+                calCnt = 0;
                 Fpga.calibrate(cal[0], cal[1], cal[2]);
                 paddleLength = fieldHeight * Fpga.PADDLE_LENGTH / Fpga.HEIGHT;
                 paddleWidth = paddleLength * PADDLE_LENGTH_TO_WIDTH;
