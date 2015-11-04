@@ -22,12 +22,12 @@ public class BaseController extends Thread {
 
     // Simulates pin handler updates
     public static void test() {
-        sleepAndCal(100, 350);
+        sleepAndCal(20000, 350);
 //        sleepAndCal(1000, 350);
-        sleepAndCal(100, 1100);
+        sleepAndCal(2000, 1100);
 //        sleepAndCal(1000, 1100);
 //        sleepAndCal(1000, 1100);
-        sleepAndCal(100, 100);
+        sleepAndCal(2000, 100);
 //        sleepAndCal(1000, 100);
         for (int i = 0; i < 8; i++) {
             sleepAndY(100, 500, true);
