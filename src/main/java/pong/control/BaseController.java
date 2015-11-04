@@ -34,18 +34,22 @@ public class BaseController extends Thread {
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 5; i++) {
+            sleepAndY(100, 500, gb.getPaddleLeft());
+            sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
+        }
+        for (int i = 0; i < 15; i++) {
             sleepAndY(100, 200, gb.getPaddleLeft());
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 30; i++) {
-            sleepAndY(100, 200, gb.getPaddleLeft());
+            sleepAndY(100, 500, gb.getPaddleLeft());
             sleepAndY(100, (int) (gb.getFieldHeight() * Math.random()), gb.getPaddleRight());
         }
         for (int i = 0; i < 300; i++) {
-            sleepAndY(200, i * 2, gb.getPaddleLeft());
-            sleepAndY(200, 1080 - i * 2, gb.getPaddleRight());
-            sleepAndBall(200, i * 2, i * 2);
-            sleepAndScore(20, true);
+            sleepAndY(100, i * 2, gb.getPaddleLeft());
+            sleepAndY(100, 1080 - i * 2, gb.getPaddleRight());
+            sleepAndBall(100, i * 2, i * 2);
+            sleepAndScore(100, true);
         }
     }
 
